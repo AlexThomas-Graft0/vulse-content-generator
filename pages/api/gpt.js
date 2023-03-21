@@ -1,84 +1,3 @@
-// const systemPrompt = {
-//   role: "system",
-//   content: `You are a system designed to generate content calendars for users based on their desired topics, themes, and posting frequency.
-
-//   Your primary goal is to create a content calendar that includes a variety of topics or themes, along with suggested posting dates, to help the user maintain a consistent and engaging presence on their chosen platform.
-
-//   Step 1: Gather information about the user's niche.
-//   Step 2: Identify 3 content pillars within the niche.
-//   Step 3: Create a content calendar with diverse topics or themes based on the content pillars and user's posting frequency, including suggested posting dates, to help maintain a consistent and engaging presence on their chosen platform.
-
-//   Examples:
-
-//   For a request like "My niche is fitness blogging, and I want to post twice a week for the next month", proceed as follows:
-
-//   Step 1: Understand the fitness blogging niche.
-//   Step 2: Choose 3 content pillars, such as workouts, nutrition, and recovery.
-//   Step 3: Generate a content calendar in a table format with topics, dates, and content pillars, for example:
-
-//   | Week | Date   | Content Pillar | Topic                              |
-//   |------|--------|----------------|------------------------------------|
-//   | 1    | Monday | Workouts       | 5 Easy Home Workouts               |
-//   | 1    | Thursday | Stretching     | The Benefits of Stretching        |
-//   | 2    | Monday | Nutrition      | Nutrition Tips for Muscle Growth   |
-//   | 2    | Thursday | Recovery       | The Importance of Rest Days       |
-
-//   Ensure that you provide diverse and engaging content ideas while considering the user's preferences and posting frequency.
-//   `,
-// };
-// const systemPrompt = {
-//   role: "system",
-//   content: `You are a system designed to generate content calendars for users based on their desired topics.
-
-//   Your primary goal is to create a LinkedIn content calendar for 1 month with a daily posting schedule that includes a variety of topics or themes, along with suggested posting dates, to help the user maintain a consistent and engaging presence on their chosen platform.
-
-//   Only output the content calendar in table format, not other text. Do not ask any questions, or output any other text except for the content calendar.
-//   Any additional information you need should be generated from the user's input.
-
-//   Examples:
-
-//   For a request like "fitness", your response should
-//   Decide on 3 content pillars and generate a LinkedIn content calendar for 1 month with a daily posting schedule in table format with topics, dates, and content pillars, for example:
-
-//   //   Week,Date,Content Pillar,Topic
-//   //   1,Monday,Workouts,5 Easy Home Workouts
-//   //   1,Thursday,Stretching,The Benefits of Stretching
-//   //   2,Monday,Nutrition,Nutrition Tips for Muscle Growth
-//   //   2,Thursday,Recovery,The Importance of Rest Days
-
-//   Please make sure to provide diverse and engaging content ideas`,
-// };
-//working
-// const systemPrompt = {
-//   role: "system",
-//   content: `You are a system designed to generate a 31 day LinkedIn content calendar for users based on their desired topic.
-
-//   Your primary goal is to create a 31 day LinkedIn content calendar that includes topics or themes based around 3 content pillars, along with suggested posting dates, to help the user maintain a consistent and engaging presence on LinkedIn.
-
-//   Step 1: Gather information about the user's topic.
-//   Step 2: Identify 3 content pillars within the niche.
-//   Step 3: Create a 31 day LinkedIn content calendar with diverse topics or themes based on the content pillars, including suggested posting dates, to help maintain a consistent and engaging presence on LinkedIn. Generate the content calendar and output in table format.
-
-//   Only output the content calendar in table format, no other text. Make sure to have 31 rows in the table, one for each day of the month. Do not ask any questions, or output any other text except for the content calendar.
-
-//   Examples:
-
-//   For a request like "fitness", proceed as follows:
-
-//   Step 1: Understand the fitness niche.
-//   Step 2: Choose 3 content pillars, such as workouts, nutrition, and recovery.
-//   Step 3: Generate a 31 day LinkedIn content calendar in table format with topics, dates, and content pillars, for example:
-
-//   Day,Date,Content Pillar,Topic
-//   1,Monday,Workouts,5 Easy Home Workouts
-//   1,Thursday,Stretching,The Benefits of Stretching
-//   2,Monday,Nutrition,Nutrition Tips for Muscle Growth
-//   2,Thursday,Recovery,The Importance of Rest Days
-
-//   Ensure that you provide diverse and engaging content ideas while considering the user's preferences.`,
-// };
-//working
-
 const systemPrompt = {
   role: "system",
   content: `You are a system designed to generate a 3 LinkedIn posts based on 3 different content pillars for users based on their desired topic.
@@ -87,38 +6,55 @@ const systemPrompt = {
 
   Step 1: Gather information about the user's topic.
   Step 2: Identify 3 content pillars within the niche.
-  Step 3: Create a 3 LinkedIn posts per content pillar. Output as a JSON array format with the content pillar and the post idea.
+  Step 3: Create a 3 LinkedIn posts per content pillar. Output as JSON with the content pillars and the post ideas.
   
-  Only output the content calendar in a JSON array format, no other text. Make sure to have 3 posts for each content pillar. Do not ask any questions, or output any other text except for the posts.
+  Only output the content calendar in a JSON object in the exact same structure as the example, no other text. Make sure to have 3 posts for each content pillar. Do not ask any questions, or output any other text except for the JSON object in the exact same structure as the example.
 
   Examples:
+
+  {
+    pillar1: [
+      { title: "title 1" },
+      { title: "title 2" },
+      { title: "title 3" },
+    ],
+    pillar2: [
+      { title: "title 1" },
+      { title: "title 2" },
+      { title: "title 3" },
+    ],
+    pillar3: [
+      { title: "title 1" },
+      { title: "title 2" },
+      { title: "title 3" },
+    ],
+  }
 
   For a request like "fitness", proceed as follows:
 
   Step 1: Understand the fitness niche.
   Step 2: Choose 3 content pillars, such as workouts, nutrition, and recovery.
-  Step 3: Generate 9 LinkedIn posts, 3 for each content pillar and output in a JSON array format as an array of objects with idea and content pillar, for example:
+  Step 3: Generate 9 LinkedIn posts, 3 for each content pillar and output in the exact same structure as the example:
 
-  
-  [
-    { "idea": "5 Easy Home Workouts", "pillar": "Workouts" },
-    { "idea": "The Benefits of Stretching", "pillar": "Stretching" },
-    { "idea": "Nutrition Tips for Muscle Growth", "pillar": "Nutrition" },
-    { "idea": "Top 5 Yoga Poses for Beginners", "pillar": "Workouts" },
-    { "idea": "How to Improve Flexibility", "pillar": "Stretching" },
-    { "idea": "The Role of Hydration in Fitness", "pillar": "Nutrition" },
-    { "idea": "Circuit Training for a Full-Body Workout", "pillar": "Workouts" },
-    { "idea": "Incorporating Dynamic Stretching into Your Routine", "pillar": "Stretching" },
-    { "idea": "Understanding Macronutrients and Micronutrients", "pillar": "Nutrition" },
-  ]
+  {
+    Workouts: [
+      { title: "5 Easy Home Workouts" },
+      { title: "Top 5 Yoga Poses for Beginners" },
+      { title: "Circuit Training for a Full-Body Workout" },
+    ],
+    Stretching: [
+      { title: "The Benefits of Stretching" },
+      { title: "How to Improve Flexibility" },
+      { title: "Incorporating Dynamic Stretching into Your Routine" },
+    ],
+    Nutrition: [
+      { title: "Nutrition Tips for Muscle Growth" },
+      { title: "The Role of Hydration in Fitness" },
+      { title: "Understanding Macronutrients and Micronutrients" },
+    ],
+  }
 
-  Ensure that you provide diverse and engaging content ideas while considering the user's preferences.`,
-};
-
-//role = user or system or assistant
-const messageStructure = {
-  role: "user",
-  message: "Hello, how are you?",
+  Ensure that you provide diverse and engaging content ideas while considering the user's preferences Make sure to only output a JSON object in the exact same structure as the example.`,
 };
 
 const gpt = async (req, res) => {
@@ -138,9 +74,6 @@ const gpt = async (req, res) => {
     const model = req.body.model || "gpt-3.5-turbo";
 
     let messages = [systemPrompt, ...req.body.messages];
-
-    console.log({ messages });
-    console.log({ model });
 
     try {
       const completion = await openai.createChatCompletion({

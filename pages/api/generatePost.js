@@ -1,6 +1,6 @@
 const systemPrompt = {
   role: "system",
-  content: `Generate a compelling LinkedIn post for your audience. Ensure that you provide diverse and engaging content ideas while considering the user's preferences. Write a post on the following topic: `,
+  content: `Generate a compelling LinkedIn post for your audience. Ensure that you provide diverse and engaging content ideas while considering the user's preferences. Every post must end with 3 relevant and popular hastags. Write a post on the following topic: `,
 };
 
 const messageStructure = {
