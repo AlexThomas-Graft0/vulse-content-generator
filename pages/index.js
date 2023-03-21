@@ -41,7 +41,7 @@ export default function Home() {
     setMessage("");
 
     // setMessages(data.messages);
-    const example = JSON.parse(data.messages[1].content);
+    const example = eval(data.messages[1].content);
     console.log({ example });
     // const example = [
     //   { idea: "5 Easy Home Workouts", pillar: "Workouts" },
