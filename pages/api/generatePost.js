@@ -22,13 +22,16 @@ const generatePost = async (req, res) => {
       return;
     }
 
+    const model = req.body.model || "gpt-3.5-turbo";
+
     let messages = [systemPrompt, ...req.body.messages];
 
     console.log({ messages });
+    console.log({ model });
 
     try {
       const completion = await openai.createChatCompletion({
-        model: "gpt-4",
+        model: model,
         messages: messages,
         temperature: 0.6,
         top_p: 1,

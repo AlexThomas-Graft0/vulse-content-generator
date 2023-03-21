@@ -58,7 +58,7 @@
 //   Step 1: Gather information about the user's topic.
 //   Step 2: Identify 3 content pillars within the niche.
 //   Step 3: Create a 31 day LinkedIn content calendar with diverse topics or themes based on the content pillars, including suggested posting dates, to help maintain a consistent and engaging presence on LinkedIn. Generate the content calendar and output in table format.
-  
+
 //   Only output the content calendar in table format, no other text. Make sure to have 31 rows in the table, one for each day of the month. Do not ask any questions, or output any other text except for the content calendar.
 
 //   Examples:
@@ -77,7 +77,7 @@
 
 //   Ensure that you provide diverse and engaging content ideas while considering the user's preferences.`,
 // };
-  //working
+//working
 
 const systemPrompt = {
   role: "system",
@@ -87,9 +87,9 @@ const systemPrompt = {
 
   Step 1: Gather information about the user's topic.
   Step 2: Identify 3 content pillars within the niche.
-  Step 3: Create a 3 LinkedIn posts per content pillar. Output in JSON format with the content pillar and the post idea.
+  Step 3: Create a 3 LinkedIn posts per content pillar. Output as a JSON array format with the content pillar and the post idea.
   
-  Only output the content calendar in JSON format, no other text. Make sure to have 3 posts for each content pillar. Do not ask any questions, or output any other text except for the posts.
+  Only output the content calendar in a JSON array format, no other text. Make sure to have 3 posts for each content pillar. Do not ask any questions, or output any other text except for the posts.
 
   Examples:
 
@@ -97,7 +97,7 @@ const systemPrompt = {
 
   Step 1: Understand the fitness niche.
   Step 2: Choose 3 content pillars, such as workouts, nutrition, and recovery.
-  Step 3: Generate 9 LinkedIn posts, 3 for each content pillar and output in JSON format as an array of objects with idea and content pillar, for example:
+  Step 3: Generate 9 LinkedIn posts, 3 for each content pillar and output in a JSON array format as an array of objects with idea and content pillar, for example:
 
   
   [
@@ -135,13 +135,16 @@ const gpt = async (req, res) => {
       return;
     }
 
+    const model = req.body.model || "gpt-3.5-turbo";
+
     let messages = [systemPrompt, ...req.body.messages];
 
     console.log({ messages });
+    console.log({ model });
 
     try {
       const completion = await openai.createChatCompletion({
-        model: "gpt-4",
+        model: model,
         messages: messages,
         temperature: 0.6,
         top_p: 1,

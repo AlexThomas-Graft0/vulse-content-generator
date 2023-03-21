@@ -10,6 +10,7 @@ export default function Home() {
   const [topics, setTopics] = useState([]);
   const [scheduledContent, setScheduledContent] = useState([]);
   const [calendar, setCalendar] = useState([]);
+  const [model, setModel] = useState("gpt-3.5-turbo");
 
   const handleSubmit = async (e) => {
     setLoading(true);
@@ -33,6 +34,7 @@ export default function Home() {
             content: message,
           },
         ],
+        model,
       }),
     });
     const data = await res.json();
@@ -40,6 +42,7 @@ export default function Home() {
 
     // setMessages(data.messages);
     const example = JSON.parse(data.messages[1].content);
+    console.log({ example });
     // const example = [
     //   { idea: "5 Easy Home Workouts", pillar: "Workouts" },
     //   { idea: "The Benefits of Stretching", pillar: "Stretching" },
@@ -109,7 +112,6 @@ export default function Home() {
   };
 
   //enter idea - ask for pillars - wait for response - ask to generate topics around pillars - wait for response - generate content - ask to schedule content - wait for response - schedule content
-
   const generatePost = async (topic) => {
     const res = await fetch("/api/generatePost", {
       method: "POST",
@@ -123,11 +125,17 @@ export default function Home() {
             content: topic,
           },
         ],
+        model,
       }),
     });
     const data = await res.json();
     console.log({ data });
     return data.messages[1].content;
+  };
+
+  //onchange of dropdown
+  const handleSetModel = (e) => {
+    setModel(e.target.value);
   };
 
   return (
@@ -152,9 +160,23 @@ export default function Home() {
             onChange={(e) => {
               setMessage(e.target.value);
             }}
+            value={message}
+            required
           />
 
           {/* //input */}
+
+          {/* select dropdown to chagne model */}
+          <select
+            className="p-3 mt-4 text-xl border rounded-xl"
+            onChange={handleSetModel}
+          >
+            <option value="gpt-4">GPT-4</option>
+            <option value="gpt-3.5-turbo" selected>
+              GPT-3.5-Turbo
+            </option>
+          </select>
+          {/* select dropdown to chagne model */}
 
           {/* button */}
           <button
