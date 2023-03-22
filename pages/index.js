@@ -231,7 +231,7 @@ export default function Home() {
                 the post will appear in the text area below.
               </p>
               <textarea
-                className="w-full p-4 mt-4 text-xl border rounded shadow-md"
+                className="w-full p-4 mt-4 text-xl border rounded shadow-md h-96"
                 value={post}
               />
 
