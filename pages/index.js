@@ -42,16 +42,17 @@ export default function Home() {
   };
 
   const generatePost = async (topic, postPillar) => {
-    const newPillars = Object.keys(pillars).map((pillar) => {
+    const newPillars = Object.assign({}, pillars);
+
+    Object.keys(pillars).forEach((pillar) => {
       if (pillar === postPillar) {
-        pillars[pillar].map((post) => {
+        newPillars[pillar] = pillars[pillar].map((post) => {
           if (post.title === topic) {
             post.loading = true;
           }
           return post;
         });
       }
-      return pillars[pillar];
     });
 
     setPillars(newPillars);
@@ -72,21 +73,20 @@ export default function Home() {
       }),
     });
     const data = await res.json();
-    setLoading(false);
 
-    const updatedPillars = Object.keys(pillars).map((pillar) => {
+    Object.keys(pillars).forEach((pillar) => {
       if (pillar === postPillar) {
-        pillars[pillar].map((post) => {
+        pillars[pillar].forEach((post) => {
           if (post.title === topic) {
             post.loading = false;
             post.post = data.messages[1].content;
           }
-          return post;
         });
       }
-      return pillars[pillar];
     });
-    setPillars(updatedPillars);
+
+    setPillars(pillars);
+    setLoading(false);
   };
 
   const handleSetModel = (e) => {
