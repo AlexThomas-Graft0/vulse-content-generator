@@ -233,6 +233,7 @@ export default function Home() {
               <textarea
                 className="w-full p-4 mt-4 text-xl border rounded shadow-md h-96"
                 value={post}
+                onChange={(e) => setPost(e.target.value)}
               />
 
               <div className="flex flex-row items-center justify-between">
