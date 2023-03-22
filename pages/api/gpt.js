@@ -14,19 +14,19 @@ const systemPrompt = {
 
   {
     pillar1: [
-      { title: "title 1" },
-      { title: "title 2" },
-      { title: "title 3" },
+      { title: "title 1", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+      { title: "title 2", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+      { title: "title 3", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
     ],
     pillar2: [
-      { title: "title 1" },
-      { title: "title 2" },
-      { title: "title 3" },
+      { title: "title 1", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+      { title: "title 2", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+      { title: "title 3", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
     ],
     pillar3: [
-      { title: "title 1" },
-      { title: "title 2" },
-      { title: "title 3" },
+      { title: "title 1", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+      { title: "title 2", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+      { title: "title 3", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
     ],
   }
 
@@ -38,19 +38,19 @@ const systemPrompt = {
 
   {
     Workouts: [
-      { title: "5 Easy Home Workouts" },
-      { title: "Top 5 Yoga Poses for Beginners" },
-      { title: "Circuit Training for a Full-Body Workout" },
+      { title: "5 Easy Home Workouts", hashtags: ["#workout", "#homeworkout", "#fitness"] },
+      { title: "Top 5 Yoga Poses for Beginners", hashtags: ["#yoga", "#fitness", "#workout"] },
+      { title: "Circuit Training for a Full-Body Workout", hashtags: ["#circuittraining", "#fitness", "#workout"] },
     ],
     Stretching: [
-      { title: "The Benefits of Stretching" },
-      { title: "How to Improve Flexibility" },
-      { title: "Incorporating Dynamic Stretching into Your Routine" },
+      { title: "The Benefits of Stretching", hashtags: ["#stretching", "#fitness", "#exercise"] },
+      { title: "How to Improve Flexibility", hashtags: ["#flexibility", "#stretching", "#fitness"] },
+      { title: "Incorporating Dynamic Stretching into Your Routine", hashtags: ["#stretching", "#fitness", "#exercise"] },
     ],
     Nutrition: [
-      { title: "Nutrition Tips for Muscle Growth" },
-      { title: "The Role of Hydration in Fitness" },
-      { title: "Understanding Macronutrients and Micronutrients" },
+      { title: "Nutrition Tips for Muscle Growth", hashtags: ["#musclegrowth", "#nutrition", "#fitness"] },
+      { title: "The Role of Hydration in Fitness", hashtags: ["#hydration", "#fitness", "#nutrition"] },
+      { title: "Understanding Macronutrients and Micronutrients", hashtags: ["#nutrition", "#macronutrients", "#micronutrients"] },
     ],
   }
 

@@ -1,6 +1,24 @@
 import Head from "next/head";
 import { useState } from "react";
 
+const examplePillars = {
+  pillar1: [
+    { title: "title 1", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+    { title: "title 2", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+    { title: "title 3", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+  ],
+  pillar2: [
+    { title: "title 1", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+    { title: "title 2", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+    { title: "title 3", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+  ],
+  pillar3: [
+    { title: "title 1", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+    { title: "title 2", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+    { title: "title 3", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+  ],
+};
+
 export default function Home() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -206,7 +224,7 @@ export default function Home() {
                                     </details>
                                     <button
                                       className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 self-end"
-                                      onClick={() => setPost(topic.post)}
+                                      onClick={() => setPost(topic)}
                                     >
                                       Edit
                                     </button>
@@ -230,15 +248,38 @@ export default function Home() {
                 You can edit the post by clicking the edit button next to it,
                 the post will appear in the text area below.
               </p>
+
               <textarea
                 className="w-full p-4 mt-4 text-xl border rounded shadow-md h-96"
-                value={post}
+                value={post.post}
                 onChange={(e) => setPost(e.target.value)}
               />
 
+              <div className="flex flex-row items-center justify-start w-full">
+                {post.hashtags &&
+                  post.hashtags.map((hashtag, index) => (
+                    <div
+                      key={hashtag}
+                      className="flex flex-row items-center justify-center p-3 m-3 text-xl whitespace-pre-wrap text-blue-500 underline cursor-pointer"
+                      onClick={() =>
+                        setPost({
+                          ...post,
+                          post: `${post.post} ${hashtag}`,
+                          hashtags: post.hashtags.filter((h) => h !== hashtag),
+                        })
+                      }
+                    >
+                      <p className="text-xl font-bold">{hashtag}</p>
+                    </div>
+                  ))}
+              </div>
+
               <div className="flex flex-row items-center justify-between">
-                {[0, 1, 2].map((i) => (
-                  <div className="flex flex-col items-center justify-center p-3 m-3 text-xl shadow-md w-[100px] h-[100px] bg-gray-100 border-2 border-gray-300 border-dashed rounded whitespace-pre-wrap">
+                {[0, 1, 2].map((i, ni) => (
+                  <div
+                    className="flex flex-col items-center justify-center p-3 m-3 text-xl shadow-md w-[100px] h-[100px] bg-gray-100 border-2 border-gray-300 border-dashed rounded whitespace-pre-wrap"
+                    key={ni}
+                  >
                     <svg
                       fill="none"
                       stroke="currentColor"
@@ -257,6 +298,7 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+
               <div className="flex flex-row items-center justify-between space-x-3">
                 <button className="rounded-full px-8 bg-gray-200 text-gray-600 p-2">
                   Save as draft
