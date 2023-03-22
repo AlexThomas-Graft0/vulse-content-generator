@@ -6,6 +6,7 @@ export default function Home() {
   const [message, setMessage] = useState("");
   const [pillars, setPillars] = useState([]);
   const [model, setModel] = useState("gpt-3.5-turbo");
+  const [post, setPost] = useState("");
 
   const handleSubmit = async (e) => {
     setLoading(true);
@@ -183,20 +184,33 @@ export default function Home() {
                                 </button>
                               </div>
                             </div>
-                            <div className="flex flex-col items-start justify-center">
+                            <div className="flex flex-col items-start justify-center w-full">
                               {topic.loading ? (
-                                <div className="flex flex-col items-center justify-center">
+                                <div className="flex flex-col items-center justify-center w-full">
                                   <div className="w-12 h-12 border-t-2 border-b-2 border-gray-900 rounded-full animate-spin"></div>
                                   <p className="mt-3 text-xl">Loading...</p>
                                 </div>
                               ) : (
                                 topic.post && (
-                                  <details className="flex flex-col items-start justify-center">
-                                    {topic.post}
-                                    <summary className="mt-3 text-gray-500 text-sm my-2 cursor-pointer">
-                                      view
-                                    </summary>
-                                  </details>
+                                  <div className="flex flex-col items-start justify-center w-full">
+                                    <details
+                                      className="flex flex-col items-start justify-center w-full"
+                                      title={topic.post}
+                                    >
+                                      {topic.post.length > 200
+                                        ? topic.post.slice(0, 200) + "..."
+                                        : topic.post}
+                                      <summary className="mt-3 text-gray-500 text-sm my-2 cursor-pointer">
+                                        view
+                                      </summary>
+                                    </details>
+                                    <button
+                                      className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 self-end"
+                                      onClick={() => setPost(topic.post)}
+                                    >
+                                      Edit
+                                    </button>
+                                  </div>
                                 )
                               )}
                             </div>
@@ -209,6 +223,52 @@ export default function Home() {
               </div>
             )}
           </div>
+          {post && (
+            <div className="flex flex-col items-start justify-center w-full px-28">
+              <h3 className="text-2xl font-bold">Edit Post</h3>
+              <p className="mt-3 text-gray-500 text-sm my-2">
+                You can edit the post by clicking the edit button next to it,
+                the post will appear in the text area below.
+              </p>
+              <textarea
+                className="w-full p-4 mt-4 text-xl border rounded shadow-md"
+                value={post}
+              />
+
+              <div className="flex flex-row items-center justify-between">
+                {[0, 1, 2].map((i) => (
+                  <div className="flex flex-col items-center justify-center p-3 m-3 text-xl shadow-md w-[100px] h-[100px] bg-gray-100 border-2 border-gray-300 border-dashed rounded whitespace-pre-wrap">
+                    <svg
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true"
+                      className="w-12 h-12 text-gray-300"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 4.5v15m7.5-7.5h-15"
+                      ></path>
+                    </svg>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-row items-center justify-between space-x-3">
+                <button className="rounded-full px-8 bg-gray-200 text-gray-600 p-2">
+                  Save as draft
+                </button>
+                <button className="rounded-full px-8 bg-gray-200 text-gray-600 p-2">
+                  Post
+                </button>
+                <button className="rounded-full px-8 bg-gray-200 text-gray-600 p-2">
+                  Schedule
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </>
