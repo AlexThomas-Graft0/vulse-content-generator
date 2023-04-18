@@ -65,30 +65,32 @@ export default function Home() {
     setLoading(true);
     e.preventDefault();
 
-    // const res = await fetch("/api/gpt", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify({
-    //     messages: [
-    //       {
-    //         role: "user",
-    //         content: message,
-    //       },
-    //     ],
-    //     model,
-    //   }),
-    // });
-    // const data = await res.json();
-    // let json = JSON.parse(data.messages[1].content);
-    console.log({ posts });
-    let json = JSON.parse(dummyResponse[1].content);
+    const res = await fetch("/api/gpt", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messages: [
+          {
+            role: "user",
+            content: message,
+          },
+        ],
+        model,
+      }),
+    });
+    const data = await res.json();
+    let json = JSON.parse(data.messages[1].content);
     if (Object.keys(json).length === 1) {
       json = json[Object.keys(json)[0]];
     }
 
     console.log({ json });
+
+    if (json["Content Pillars"]) {
+      delete json["Content Pillars"];
+    }
 
     setMessage("");
 
@@ -298,9 +300,7 @@ export default function Home() {
   };
 
   const handleConnectLinkedIn = async () => {
-    const res = await fetch("/api/linkedin");
-    const data = await res.json();
-    console.log({ data });
+    console.log(`connect linkedin`);
   };
 
   const image1Ref = useRef(null);
@@ -332,16 +332,16 @@ export default function Home() {
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
-            clip-rule="evenodd"
-            fill-rule="evenodd"
+            clipRule="evenodd"
+            fillRule="evenodd"
             d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"
           ></path>
         </svg>
       </button>
-      <div className="grid grid-cols-12 gap-4">
+      <div className="grid grid-cols-12 gap-4 h-full min-h-screen">
         <aside
           id="default-sidebar"
-          className="ixed top-0 left-0 z-40 h-screen transition-transform -translate-x-full sm:translate-x-0 col-span-1"
+          className="ixed top-0 left-0 z-40 transition-transform -translate-x-full sm:translate-x-0 col-span-1"
           aria-label="Sidebar"
         >
           <div className="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-violet-500">
@@ -450,9 +450,25 @@ export default function Home() {
 
               <div className="flex items-center justify-end space-x-2 h-24 rounded">
                 <button
-                  className="p-5 text-white bg-gray-200 border-2 border-violet-500 rounded-full"
+                  className="p-2 text-white bg-gray-200 border-2 border-violet-500 rounded-full group"
                   onClick={handleConnectLinkedIn}
-                ></button>
+                >
+                  <svg
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                    className="w-5 h-5 transition duration-75 text-gray-400 group-hover:text-gray-500"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                    />
+                  </svg>
+                </button>
                 <p className="text-l text-gray-400 dark:text-gray-500">
                   <button className="px-6 py-2 text-white bg-violet-500 rounded-full flex items-end">
                     Create new post{" "}
@@ -473,27 +489,27 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <div className="flex flex-col items-start justify-center w-full h-full py-4 space-y-">
+            <div className="flex flex-col items-start justify-center w-full h-full p- space-y-2 ">
               <h3 className="text-2xl font-semibold text-gray-400 dark:text-gray-500 text-center">
                 Generate New Themes
               </h3>
               <form
-                className="flex flex-l items-center justify-between  w-full"
+                className="flex flex-l items-center justify-start w-full space-x-3"
                 onSubmit={handleSubmit}
               >
                 <select
-                  className="p-3  text-xl border rounded-xl"
+                  className="p-3 text-x border rounded-xl"
                   onChange={handleSetModel}
                 >
                   <option value="gpt-4">GPT-4</option>
-                  <option value="gpt-3.5-turbo" selected>
+                  <option value="gpt-3.5-turbo" selected defaultValue>
                     GPT-3.5-Turbo
                   </option>
                 </select>
                 <input
                   type="text"
                   placeholder="topic"
-                  className="w-100 p-3 text-xl border rounded-xl"
+                  className="w-100 p-3 text-x border rounded-xl"
                   onChange={(e) => {
                     setMessage(e.target.value);
                   }}
@@ -502,17 +518,17 @@ export default function Home() {
                 />
 
                 <button
-                  className="px-3 py-1  text-xl text-white bg-violet-500 rounded-full"
+                  className="px-3 py-1 text-x text-white bg-violet-500 rounded-full"
                   type="submit"
                 >
                   {loading ? "Loading..." : "Generate"}
                 </button>
               </form>
             </div>
-            <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-3 gap-4 mb-4 border-b py-3">
               {Object.keys(pillars).map((pillar, index) => (
                 <div
-                  className={`flex flex-col items-start justify-start rounded ${
+                  className={`flex flex-col items-start justify-start  ${
                     index != 2 && "border-r"
                   } pr-3`}
                   key={index}
@@ -527,9 +543,9 @@ export default function Home() {
 
                   <div className="flex flex-col items-start justify-center rounded space-y-4 py-2 px-1 text-sm">
                     {pillars[pillar]?.map((topic, index) => (
-                      <>
+                      <div className="flex flex-col items-center justify-between space-x-2 py-2 px-1 text-sm w-full border-b2">
                         <div
-                          className="flex items-center justify-between rounded space-x-2 py-2 px-1 text-sm w-full border-b"
+                          className="flex items-center justify-between rounded space-x-2 py-2 px-1 text-sm w-full"
                           key={index}
                         >
                           <h3 className="text-sm font-semibold text-gray-800">
@@ -561,7 +577,7 @@ export default function Home() {
                         {topic.post && (
                           <div className="text-2l text-gray-400 dark:text-gray-500 fomt-semibold w-full">
                             <details className="flex flex-col items-start justify-start space-y-2 w-full">
-                              <summary className="flex items-center justify-center space-x-2 py-2 px-1 text-sm border-b cursor-pointer">
+                              <summary className="flex items-center justify-center space-x-2 py-2 px-1 text-sm border- cursor-pointer">
                                 {topic.post.length > 50
                                   ? topic.post.slice(0, 50) + "..."
                                   : topic.post}
@@ -605,137 +621,105 @@ export default function Home() {
                             </details>
                           </div>
                         )}
-                      </>
+                      </div>
                     ))}
                   </div>
 
                   <p className="text-2xl text-gray-400 dark:text-gray-500"></p>
                 </div>
               ))}
-
-              {post && (
-                <div className="grid grid-cols-6 gap-4 mb-4 col-span-3">
-                  <div className="flex flex-col items-start justify-center col-span-3 space-y-3">
-                    <textarea
-                      className="w-full p-2 text-xs border rounded shadow-md mni-h-[100px] max-h-[300px] focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent"
-                      value={post.post}
-                      onChange={(e) => setPost(e.target.value)}
-                    />
-                    <div className="flex flex-row items-center justify-between">
-                      {[0, 1, 2].map((i, ni) => (
+            </div>
+            {post && (
+              <div className="grid grid-cols-6 gap-4 mb-4 col-span-3">
+                <div className="flex flex-col items-start justify-center col-span-3 space-y-3">
+                  <textarea
+                    className="w-full p-2 text-xs border rounded shadow-md min-h-[100px] max-h-[300px] focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent"
+                    value={post.post}
+                    onChange={(e) => setPost(e.target.value)}
+                  />
+                  <div className="flex flex-row items-center justify-between">
+                    {[0, 1, 2].map((i, ni) => (
+                      <div
+                        className="flex flex-col items-center justify-center p-2 my-3 mr-3 text-xl shadow-md w-[100px] h-[100px] bg-g0 border-2 border-gray-300 border-dashed rounded whitespace-pre-wrap"
+                        key={ni}
+                      >
+                        <input
+                          type="file"
+                          className="hidden"
+                          ref={
+                            i === 0
+                              ? image1Ref
+                              : i === 1
+                              ? image2Ref
+                              : i === 2
+                              ? image3Ref
+                              : null
+                          }
+                        />
                         <div
-                          className="flex flex-col items-center justify-center p-2 my-3 mr-3 text-xl shadow-md w-[100px] h-[100px] bg-g0 border-2 border-gray-300 border-dashed rounded whitespace-pre-wrap"
-                          key={ni}
+                          className="bg-gray-100 w-full h-full flex justify-center items-center rounded cursor-pointer"
+                          onClick={() => {
+                            if (i === 0) image1Ref.current.click();
+                            if (i === 1) image2Ref.current.click();
+                            if (i === 2) image3Ref.current.click();
+                          }}
                         >
-                          <input
-                            type="file"
-                            className="hidden"
-                            ref={
-                              i === 0
-                                ? image1Ref
-                                : i === 1
-                                ? image2Ref
-                                : i === 2
-                                ? image3Ref
-                                : null
-                            }
-                          />
-                          <div
-                            className="bg-gray-100 w-full h-full flex justify-center items-center rounded cursor-pointer"
-                            onClick={() => {
-                              if (i === 0) image1Ref.current.click();
-                              if (i === 1) image2Ref.current.click();
-                              if (i === 2) image3Ref.current.click();
-                            }}
+                          <svg
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true"
+                            className="w-12 h-12 text-gray-300"
                           >
-                            <svg
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                              aria-hidden="true"
-                              className="w-12 h-12 text-gray-300"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M12 4.5v15m7.5-7.5h-15"
-                              ></path>
-                            </svg>
-                          </div>
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M12 4.5v15m7.5-7.5h-15"
+                            ></path>
+                          </svg>
                         </div>
-                      ))}
-                    </div>
-                    <input
-                      className="w-full p-2 text-xs border rounded shadow-md"
-                      placeholder="First post comment"
-                    />
-                    <div className="flex flex-row items-center justify-between w-full">
-                      <button className="py-1 px-5 rounded-full bg-gray-200 text-gray-600">
-                        Save as draft
-                      </button>
-                      <button className="py-1 px-5 rounded-full bg-violet-600 text-gray-50">
-                        Post
-                      </button>
-                      <button className="py-1 px-5 rounded-full border-2 border-violet-600 text-gray-600">
-                        Schedule
-                      </button>
-                    </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-start justify-center h-[300px] rounded self-start border-l-2 pl-2">
-                    <p className="font-semibold text-gray-400 dark:text-gray-500 ">
-                      {isWeek ? "Monday" : "1"}
-                    </p>
-                  </div>
-                  <div className="flex items-start justify-center h-[300px] rounded self-start border-l-2 pl-2">
-                    <p className="font-semibold text-gray-400 dark:text-gray-500 ">
-                      {isWeek ? "Tuesday" : "2"}
-                    </p>
-                  </div>
-                  <div className="flex items-start justify-center h-[300px] mb-4 rounded self-start border-l-2 pl-2">
-                    <p className="font-semibold text-gray-400 dark:text-gray-500">
-                      {isWeek ? "Wednesday" : "3"}
-                    </p>
+                  <input
+                    className="w-full p-2 text-xs border rounded shadow-md"
+                    placeholder="First post comment"
+                  />
+                  <div className="flex flex-row items-center justify-between w-full">
+                    <button className="py-1 px-5 rounded-full bg-gray-200 text-gray-600">
+                      Save as draft
+                    </button>
+                    <button className="py-1 px-5 rounded-full bg-violet-600 text-gray-50">
+                      Post
+                    </button>
+                    <button className="py-1 px-5 rounded-full border-2 border-violet-600 text-gray-600">
+                      Schedule
+                    </button>
                   </div>
                 </div>
-              )}
-            </div>
-            {/* <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                <p className="text-2xl text-gray-400 dark:text-gray-500">+</p>
+                <div className="flex items-start justify-center h-[300px] rounded self-start border-l-2 pl-2">
+                  <p className="font-semibold text-gray-400 dark:text-gray-500 ">
+                    {isWeek ? "Monday" : "Jan"}
+                  </p>
+                </div>
+                <div className="flex items-start justify-center h-[300px] rounded self-start border-l-2 pl-2">
+                  <p className="font-semibold text-gray-400 dark:text-gray-500 ">
+                    {isWeek ? "Tuesday" : "Feb"}
+                  </p>
+                </div>
+                <div className="flex items-start justify-center h-[300px] mb-4 rounded self-start border-l-2 pl-2">
+                  <p className="font-semibold text-gray-400 dark:text-gray-500">
+                    {isWeek ? "Wednesday" : "Mar"}
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                <p className="text-2xl text-gray-400 dark:text-gray-500">+</p>
-              </div>
-              <div className="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                <p className="text-2xl text-gray-400 dark:text-gray-500">+</p>
-              </div>
-              <div className="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                <p className="text-2xl text-gray-400 dark:text-gray-500">+</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-center h-48 mb-4 rounded bg-gray-50 dark:bg-gray-800">
-              <p className="text-2xl text-gray-400 dark:text-gray-500">+</p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                <p className="text-2xl text-gray-400 dark:text-gray-500">+</p>
-              </div>
-              <div className="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                <p className="text-2xl text-gray-400 dark:text-gray-500">+</p>
-              </div>
-              <div className="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                <p className="text-2xl text-gray-400 dark:text-gray-500">+</p>
-              </div>
-              <div className="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                <p className="text-2xl text-gray-400 dark:text-gray-500">+</p>
-              </div>
-            </div> */}
+            )}
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-start w-full h-full p-5 space-y-4 select-none bg-gray-100 pt-7 col-span-2">
+        <div className="flex flex-col items-center justify-start w-full h-full p-2 space-y-4 select-none bg-gray-100 pt-7 col-span-2">
           <div className="flex items-center justify-center h16 rounded-full border border-gray-200 px0 w-ful self-center bg-gray-200 px-0">
             <div
               className="text-gray-400 dark:text-gray-500 px-0 cursor-pointer transition duration-200 ease-in-out"
@@ -804,36 +788,39 @@ export default function Home() {
 
           {/*  */}
 
-          <select
-            className="w-full p-3 mt- text-xs border rounded-lg"
-            onChange={handleChangePersonality}
-            value={personality}
-          >
-            {Object.keys(personalities).map((personalityOption, index) => (
-              <option key={index} value={personalityOption}>
-                {personalityOption}
-              </option>
-            ))}
-          </select>
-
-          {/*  */}
+          <div className="flex flex-col items-start justify-center space-y-3 w-full">
+            <p className="text-sm text-gray-400 dark:text-gray-500">
+              Personality
+            </p>
+            <select
+              className="w-full p-3 mt- text-xs border rounded-lg"
+              onChange={handleChangePersonality}
+              value={personality}
+            >
+              {Object.keys(personalities).map((personalityOption, index) => (
+                <option key={index} value={personalityOption}>
+                  {personalityOption}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {includePastPosts && posts?.length > 0 && (
-            <div className="flex flex-col items-start justify-center space-y-3">
-              <div className="flex flex-col items-center p-2 justify-start space-y-5 overflow-y-scroll w-full shadow border-gray-300 rounded-lg">
+            <div className="flex flex-col items-start justify-center space-y-3 w-full">
+              <div className="flex flex-col items-center p-1 justify-start space-y-5 overflow-y-scroll w-full shadow bg-gray-50 border-gray-300 rounded-lg">
                 {posts.map((post, index) => (
                   <div
-                    className="flex flex-col items-start justify-start space-y-3"
+                    className="flex flex-col items-start justify-start space-y-3 w-full"
                     key={index}
                   >
                     <textarea
                       key={index}
-                      className="w-full p-3 mt- text-xs border rounded-xl h-[100px] focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent focus:h-[300px] resize-none transform transition-all duration-600 ease-in-out"
+                      className="w-full p-1 mt- text-xs border rounded-lg h-[100px] focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent focus:h-[300px] resize-none transform transition-all duration-600 ease-in-out"
                       value={post.content}
                       onChange={(e) => handlePostChange(e, index)}
                     />
                     <button
-                      className="px-3 py-1 text-white bg-red-500 rounded-full flex items-center"
+                      className="px-3 py-1 text-white bg-red-500 rounded-full flex items-center self-end"
                       onClick={() => handleDeletePost(index)}
                     >
                       <svg
@@ -851,7 +838,7 @@ export default function Home() {
                           d="M6 18L18 6M6 6l12 12"
                         />
                       </svg>
-                      <span className="text-xs">Delete Post</span>
+                      <span className="text-xs ">Delete Post</span>
                     </button>
                   </div>
                 ))}
