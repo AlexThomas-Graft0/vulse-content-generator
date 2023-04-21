@@ -564,15 +564,6 @@ export default function Home() {
                 </button>
               </form>
             </div>
-            <div className="flex flex-col items-start justify-start w-full h-full p- space-y-2 ">
-              {/* //display genearted bios */}
-              <h3 className="text-2xl font-semibold text-gray-400 dark:text-gray-500 text-center">
-                Generated Bios
-              </h3>
-              <div className="flex flex-col items-start justify-start w-full h-full p- space-y-2 whitespace-pre-wrap">
-                {generatedBios}
-              </div>
-            </div>
             <div className="grid grid-cols-3 gap-4 mb-4 border-b py-3">
               {Object.keys(pillars).map((pillar, index) => (
                 <div
