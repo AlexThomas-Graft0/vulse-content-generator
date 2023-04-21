@@ -1,3 +1,5 @@
+import { OpenAIStream } from "../../utils/OpenAIStream";
+
 const systemPrompt = {
   role: "system",
   content: `You are a system designed to generate a 3 LinkedIn posts based on 3 different content pillars for users based on their desired topic.
@@ -57,52 +59,35 @@ const systemPrompt = {
   Ensure that you provide diverse and engaging content ideas while considering the user's preferences Make sure to only output a JSON object in the exact same structure as the example.`,
 };
 
-const gpt = async (req, res) => {
-  if (req.method === "POST") {
-    const { Configuration, OpenAIApi } = require("openai");
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error("Missing env var from OpenAI");
+}
 
-    const configuration = new Configuration({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-    const openai = new OpenAIApi(configuration);
-
-    if (!req.body.messages) {
-      res.status(400).json({ error: "messages is required" });
-      return;
-    }
-
-    const model = req.body.model || "gpt-3.5-turbo";
-
-    let messages = [systemPrompt, ...req.body.messages];
-
-    try {
-      const completion = await openai.createChatCompletion({
-        model: model,
-        messages: messages,
-        temperature: 0.6,
-        top_p: 1,
-        n: 1,
-        stream: false,
-      });
-
-      messages.shift();
-      messages.push({
-        role: "assistant",
-        content: completion.data.choices[0].message.content,
-      });
-
-      res.status(200).json({ messages });
-      return;
-    } catch (error) {
-      console.log({ error });
-      res.status(500).json({ error: error.message });
-    }
-  } else {
-    res.setHeader("Allow", "POST");
-    res.status(405).end("Method Not Allowed");
-  }
+export const config = {
+  runtime: "edge",
 };
 
-export { gpt };
+async function POST(req) {
+  const { messages, model } = await req.json();
 
-export default gpt;
+  if (!messages) {
+    return new Response("No messages in the request", { status: 400 });
+  }
+
+  const payload = {
+    model: model || "gpt-3.5-turbo",
+    messages: [systemPrompt, ...messages],
+    temperature: 0.7,
+    top_p: 1,
+    frequency_penalty: 0,
+    presence_penalty: 0,
+    max_tokens: 1000,
+    stream: true,
+    n: 1,
+  };
+
+  const stream = await OpenAIStream(payload);
+  return new Response(stream);
+}
+
+export default POST;

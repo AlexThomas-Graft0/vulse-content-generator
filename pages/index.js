@@ -61,6 +61,8 @@ export default function Home() {
   const [model, setModel] = useState("gpt-3.5-turbo");
   const [post, setPost] = useState("");
 
+  const [generatedBios, setGeneratedBios] = useState("");
+
   const handleSubmit = async (e) => {
     setLoading(true);
     e.preventDefault();
@@ -80,22 +82,43 @@ export default function Home() {
         model,
       }),
     });
-    const data = await res.json();
-    let json = JSON.parse(data.messages[1].content);
+    const data = res.body;
+
+    setMessage("");
+
+    const reader = data.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+    let generatedBios = "";
+
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      const chunkValue = decoder.decode(value);
+      generatedBios += chunkValue;
+    }
+
+    console.log({ generatedBios });
+
+    // Wrap the string in curly braces
+    const wrappedGeneratedBios = "{" + generatedBios + "}";
+
+    // Parse the wrapped string as JSON
+    let json = JSON.parse(wrappedGeneratedBios.slice(0, -1));
+    console.log({ json });
+
     if (Object.keys(json).length === 1) {
       json = json[Object.keys(json)[0]];
     }
-
-    console.log({ json });
 
     if (json["Content Pillars"]) {
       delete json["Content Pillars"];
     }
 
-    setMessage("");
+    console.log({ json });
 
     setPillars(json);
-
+    console.log({ pillars });
     setLoading(false);
   };
 
@@ -147,18 +170,34 @@ export default function Home() {
         model,
       }),
     });
-    const data = await res.json();
+    const data = await res.body;
+    // const data = await res.json();
+
+    let selectedPost;
 
     Object.keys(pillars).forEach((pillar) => {
       if (pillar === postPillar) {
         pillars[pillar].forEach((post) => {
           if (post.title === topic) {
-            post.loading = false;
-            post.post = data.messages[1].content;
+            selectedPost = post;
           }
         });
       }
     });
+
+    const reader = data.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+    let generatedPost = "";
+
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      const chunkValue = decoder.decode(value);
+      generatedPost += chunkValue;
+      selectedPost.loading = false;
+      selectedPost.post = generatedPost;
+    }
 
     setPillars(pillars);
     setLoading(false);
@@ -525,6 +564,15 @@ export default function Home() {
                 </button>
               </form>
             </div>
+            <div className="flex flex-col items-start justify-start w-full h-full p- space-y-2 ">
+              {/* //display genearted bios */}
+              <h3 className="text-2xl font-semibold text-gray-400 dark:text-gray-500 text-center">
+                Generated Bios
+              </h3>
+              <div className="flex flex-col items-start justify-start w-full h-full p- space-y-2 whitespace-pre-wrap">
+                {generatedBios}
+              </div>
+            </div>
             <div className="grid grid-cols-3 gap-4 mb-4 border-b py-3">
               {Object.keys(pillars).map((pillar, index) => (
                 <div
@@ -788,21 +836,26 @@ export default function Home() {
 
           {/*  */}
 
-          <div className="flex flex-col items-start justify-center space-y-3 w-full">
-            <p className="text-sm text-gray-400 dark:text-gray-500">
-              Personality
-            </p>
-            <select
-              className="w-full p-3 mt- text-xs border rounded-lg"
-              onChange={handleChangePersonality}
-              value={personality}
-            >
-              {Object.keys(personalities).map((personalityOption, index) => (
-                <option key={index} value={personalityOption}>
-                  {personalityOption}
-                </option>
-              ))}
-            </select>
+          <div className="flex flex-col items-center space-y-2 justify-center w-full">
+            <div className="flex flex-col items-start justify-center space-y-3 w-full">
+              <p className="text-sm text-gray-400 dark:text-gray-500">
+                Personality
+              </p>
+              <select
+                className="w-full p-3 mt- text-xs border rounded-lg"
+                onChange={handleChangePersonality}
+                value={personality}
+              >
+                {Object.keys(personalities).map((personalityOption, index) => (
+                  <option key={index} value={personalityOption}>
+                    {personalityOption}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* <button className="px-3 py-1 text-white bg-violet-500 rounded-full flex items-center">
+              Connect LinkedIn
+            </button> */}
           </div>
 
           {includePastPosts && posts?.length > 0 && (
