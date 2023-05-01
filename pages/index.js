@@ -1,13 +1,8 @@
+import { deleteCookie, getCookies } from "cookies-next";
 import Head from "next/head";
-import React, { useState, useRef, useEffect, use } from "react";
-import { createClient } from "@supabase/supabase-js";
-import { Auth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
-
-const supabase = createClient(
-  "https://vnubaawakniyznbldyxu.supabase.co/",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZudWJhYXdha25peXpuYmxkeXh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzI5NTkyNjIsImV4cCI6MTk4ODUzNTI2Mn0.l8DKzBtmfkpyztBcAcHZ4tEvUEV3a4lSU9qkXS6za48"
-);
+import React, { useEffect, useRef, useState } from "react";
+import LinkedInAuth from "../components/LinkedInAuth";
+import { LINKEDIN_URL } from "../helpers/auth";
 
 //needs to take in linkedin posts from the user
 // -- test by feeding them in
@@ -67,30 +62,54 @@ export default function Home() {
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [pillars, setPillars] = useState([]);
+  const [pillars, setPillars] = useState([
+    {
+      pillar: "pillar 1",
+    },
+    {
+      pillar: "pillar 2",
+    },
+    {
+      pillar: "pillar 3",
+    },
+  ]);
   const [model, setModel] = useState("gpt-3.5-turbo");
   const [post, setPost] = useState("");
 
   const [generatedBios, setGeneratedBios] = useState("");
 
+  const [personalPosts, setPersonalPosts] = useState([]);
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+    const cookies = getCookies();
+    console.log({ cookies });
 
-    const {
-      data: { subscription },
-      error,
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log({ _event, session });
-      setSession(session);
-    });
+    const getPosts = async () => {
+      const postUrl = `/api/getOrgPosts?access_token=${cookies.access_token}`;
+      const response = await fetch(postUrl, {
+        method: "GET",
+      });
+      const posts = await response.json();
+      const personalPersonality = posts;
 
-    if (error) {
-      console.log("error", error);
+      //add personalPersonality to personalites with setPersonalities
+      const newPersonalities = {
+        ...personalities,
+        personal: personalPersonality,
+      };
+      console.log({ newPersonalities });
+      setPersonalities(newPersonalities);
+
+      setPersonalPosts(posts);
+    };
+
+    if (cookies.access_token) {
+      getPosts();
     }
 
-    return () => subscription.unsubscribe();
+    if (cookies.userData) {
+      setSession(JSON.parse(decodeURIComponent(cookies.userData)));
+    }
   }, []);
 
   const handleSubmit = async (e) => {
@@ -152,17 +171,78 @@ export default function Home() {
     setLoading(false);
   };
 
-  const generatePost = async (topic, postPillar) => {
-    const newPillars = Object.assign({}, pillars);
+  const generatePostIdeas = async (topic, index) => {
+    const userMessage = {
+      role: "user",
+      content: topic,
+    };
 
-    Object.keys(pillars).forEach((pillar) => {
-      if (pillar === postPillar) {
-        newPillars[pillar] = pillars[pillar].map((post) => {
-          if (post.title === topic) {
-            post.loading = true;
+    const res = await fetch("/api/generateIdeas", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messages: [userMessage],
+        model,
+      }),
+    });
+    const data = res.body;
+    const reader = data.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+    let ideas = "[";
+
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      const chunkValue = decoder.decode(value);
+      ideas += chunkValue;
+    }
+
+    console.log({ ideas });
+    const sanitizedData = ideas
+      .replace(/\\\"/g, '"')
+      .replace(/title:/g, '"title":')
+      .replace(/hashtags:/g, '"hashtags":');
+    const jsonArray = eval(sanitizedData.trim());
+    console.log(jsonArray);
+
+    //add ideas to pillar
+    const newPillars = Object.assign([], pillars);
+
+    pillars.forEach((pillar, pi) => {
+      if (pi === index) {
+        pillar.ideas = jsonArray;
+      }
+    });
+
+    setPillars(newPillars);
+
+    console.log({ pillars });
+  };
+
+  const generatePost = async (topic, postPillar) => {
+    const newPillars = Object.assign([], pillars);
+
+    pillars.forEach((pillar, pi) => {
+      console.log(pillar);
+      console.log(postPillar);
+      if (pillar.pillar === postPillar) {
+        console.log("found pillar");
+        pillar.ideas.forEach((idea, ideaIndex) => {
+          if (idea.title === topic) {
+            console.log("found idea");
+            idea.loading = true;
           }
-          return post;
         });
+
+        //   newPillars[pillar.pillar] = pillars[pillar].ideas.map((post) => {
+        //     if (post.title === topic) {
+        //       post.loading = true;
+        //     }
+        //     return post;
+        //   });
       }
     });
 
@@ -205,9 +285,12 @@ export default function Home() {
 
     let selectedPost;
 
-    Object.keys(pillars).forEach((pillar) => {
-      if (pillar === postPillar) {
-        pillars[pillar].forEach((post) => {
+    pillars.forEach((pillar) => {
+      if (pillar.pillar === postPillar) {
+        console.log("290");
+        console.log(pillar, postPillar);
+        console.log("290");
+        pillar.ideas.forEach((post) => {
           if (post.title === topic) {
             selectedPost = post;
           }
@@ -247,10 +330,6 @@ export default function Home() {
   const handleTrending = () => {
     setIsTrending(!isTrending);
   };
-
-  const [includePastPosts, setIncludePastPosts] = useState(false);
-  const [includePillars, setIncludePillars] = useState(false);
-  const [includeTopics, setIncludeTopics] = useState(false);
 
   const [personality, setPersonality] = useState("linkedIn");
   const [personalities, setPersonalities] = useState({
@@ -355,8 +434,8 @@ export default function Home() {
   };
 
   const handlePostChange = (e, index) => {
-    console.log({ e, index });
-    console.log(e.target.value);
+    // console.log({ e, index });
+    // console.log(e.target.value);
     const newPosts = [...posts];
     newPosts[index].content = e.target.value;
     setPosts(newPosts);
@@ -368,47 +447,17 @@ export default function Home() {
     setPosts(newPosts);
   };
 
-  const handleConnectLinkedIn = async () => {
-    console.log(`connect linkedin`);
-  };
-
-  const [name, setName] = useState("");
-  const [linkedInData, setLinkedInData] = useState(null);
-  async function signInWithLinkedIn() {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "linkedin",
-    });
-
-    if (error) {
-      console.log("error", error);
-    }
-
-    if (data) {
-      console.log("data", data);
-      setLinkedInData(data);
-    }
-  }
-
   async function signOut() {
-    const { error } = await supabase.auth.signOut();
+    setSession(null);
+    deleteCookie("session");
+    deleteCookie("access_token");
+    deleteCookie("userData");
   }
 
   const image1Ref = useRef(null);
   const image2Ref = useRef(null);
   const image3Ref = useRef(null);
 
-  // if (!session) {
-  //   return (
-  //     <Auth
-  //       supabaseClient={supabase}
-  //       appearance={{ theme: ThemeSupa }}
-  //       socialLayout="horizontal"
-  //       socialButtonSize="xlarge"
-  //       socialColors={true}
-  //       providers={["linkedin"]}
-  //     />
-  //   );
-  // } else {
   return (
     <>
       <Head>
@@ -441,156 +490,57 @@ export default function Home() {
         </svg>
       </button>
       <div className="grid grid-cols-12 gap-4 h-full min-h-screen">
-        <aside
-          id="default-sidebar"
-          className="ixed top-0 left-0 z-40 transition-transform -translate-x-full sm:translate-x-0 col-span-1"
-          aria-label="Sidebar"
-        >
-          <div className="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-violet-500">
-            <a
-              href="https://flowbite.com/"
-              className="flex flex-col items-center justify-center mb-5 space-y-1"
-            >
-              <img
-                src="https://flowbite.com/docs/images/logo.svg"
-                className="h-6 sm:h-7"
-                alt="Flowbite Logo"
-              />
-              <span className="self-center text-xl font-semibold text-white">
-                Vulse
-              </span>
-            </a>
-            <hr className="mb-4 border-t-2 w-10 mx-auto border-white" />
-            <ul className="space-y-2 font-medium">
-              <li>
-                <a
-                  href="#"
-                  className="flex flex-col items-center p-2 rounded-lg text-white"
-                >
-                  <svg
-                    aria-hidden="true"
-                    className="flex-shrink-0 w-6 h-6 transition duration-75text-white"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                  </svg>
-                  <span className="text-xs">Themes</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="flex flex-col justify-center items-center p-2 rounded-lg text-white"
-                >
-                  <svg
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                    className="flex-shrink-0 w-6 h-6 transition duration-75 text-white"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"
-                    />
-                  </svg>
-                  <span className="text-xs">Schedule</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-        </aside>
-
-        <div className="p- sm:ml64 col-span-9">
+        <div className="p-5 sm:ml64 col-span-10">
           <div className="">
-            <div className="grid grid-cols-3 2xl:grid-cols-3 gap-4 mb-4">
-              <div className="flex items-center justify-start space-x-5 rounded">
+            <div className="grid grid-cols-2 2xl:grid-cols-3 gap-4 mb-4">
+              <div className="flex items-center justify-between space-x-5 rounded">
                 <h1 className="text-3xl font-bold text-gray-400 dark:text-slate-800">
                   Themes
                 </h1>
-                <div className="flex flex-col items-center justify-start w-full h-full p-4 space-y-4">
-                  <div className="flex items-center justify-center h16 rounded-full border border-gray-200 px0 w-ful self-center bg-white p-1">
-                    <div
-                      className="text- text-gray-400 dark:text-gray-500 px-0 cursor-pointer transition duration-200 ease-in-out select-none"
-                      onClick={handleToggle}
-                    >
-                      <div className="flex items-center px-0">
-                        <span
-                          className={`mr-2 flex rounded-full p-3 px-5 ${
-                            isWeek
-                              ? "text-violet-500 bg-violet-100"
-                              : "text-gray-300"
-                          }`}
-                        >
-                          Week
-                        </span>
-                        <span
-                          className={`mr-2 flex rounded-full p-3 px-5 ${
-                            !isWeek
-                              ? "text-violet-500 bg-violet-100"
-                              : "text-gray-300"
-                          }`}
-                        >
-                          Month
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
-
-              <div className="flex items-center justify-center rounded">
-                <h2 className="text-4xl font-semibold text-gray-400 dark:text-violet-500">
-                  {new Date().toLocaleString("default", { month: "long" })}
-                </h2>
+              <div className="flex items-center justify-end space-x-2 h-24 rounded">
+                {/* <LinkedInAuth /> */}
+                {/* <PersonalConnect /> */}
               </div>
-
               <div className="flex items-center justify-end space-x-2 h-24 rounded">
                 {session ? (
-                  <span className="text font-semibold text-gray-400 dark:text-violet-500">
-                    {session.user.user_metadata.full_name}
-                  </span>
-                ) : (
-                  <span className="text font-semibold text-gray-400 dark:text-slate-500">
-                    Sign in
-                  </span>
-                )}
-                <button
-                  className={`p-2 text-white bg-gray-200 border-2 rounded-full group ${
-                    session
-                      ? "bg-violet-100 border-violet-500"
-                      : "bg-gray-200 border-gray-200"
-                  }`}
-                  onClick={() => {
-                    if (session) {
-                      signOut();
-                    } else {
-                      signInWithLinkedIn();
-                    }
-                  }}
-                >
-                  {session ? (
-                    <svg
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                      aria-hidden="true"
-                      className="w-5 h-5 transition duration-75 text-violet-400 group-hover:text-gray-500"
+                  <button
+                    className="flex items-center space-x-2 text font-semibold text-gray-400 dark:text-violet-500"
+                    onClick={() => signOut()}
+                  >
+                    <span>
+                      {session.localizedFirstName} {session.localizedLastName}
+                    </span>
+                    <div
+                      className={`p-2 w-10 h-10 text-white bg-gray-200 border-2 rounded-full group ${
+                        session
+                          ? "bg-violet-100 border-violet-500"
+                          : "bg-gray-200 border-gray-200"
+                      }`}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                      />
-                    </svg>
-                  ) : (
+                      <svg
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={1.5}
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                        className="w-5 h-5 transition duration-75 text-violet-400 group-hover:text-gray-500"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                        />
+                      </svg>
+                    </div>
+                  </button>
+                ) : (
+                  <a
+                    className="flex items-center space-x-2 text font-semibold text-gray-400 dark:text-slate-500"
+                    href={LINKEDIN_URL}
+                  >
+                    Sign in
                     <svg
                       fill="none"
                       stroke="currentColor"
@@ -606,8 +556,8 @@ export default function Home() {
                         d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
                       />
                     </svg>
-                  )}
-                </button>
+                  </a>
+                )}
               </div>
             </div>
             <div className="flex flex-col items-start justify-center w-full h-full p- space-y-2 ">
@@ -618,16 +568,19 @@ export default function Home() {
                 className="flex flex-l items-center justify-start w-full space-x-3"
                 onSubmit={handleSubmit}
               >
+                <label className="text-gray-400 dark:text-gray-500">
+                  Priority
+                </label>
                 <select
                   className="p-3 text-x border rounded-xl"
                   onChange={handleSetModel}
                 >
-                  <option value="gpt-4">GPT-4</option>
-                  <option value="gpt-3.5-turbo" selected defaultValue>
-                    GPT-3.5-Turbo
+                  <option value="gpt-4" defaultValue>
+                    Quality
                   </option>
+                  <option value="gpt-3.5-turbo">Speed</option>
                 </select>
-                <input
+                {/* <input
                   type="text"
                   placeholder="topic"
                   className="w-100 p-3 text-x border rounded-xl"
@@ -643,112 +596,157 @@ export default function Home() {
                   type="submit"
                 >
                   {loading ? "Loading..." : "Generate"}
-                </button>
+                </button> */}
               </form>
             </div>
             <div className="grid grid-cols-3 gap-4 mb-4 border-b py-3">
-              {Object.keys(pillars).map((pillar, index) => (
-                <div
-                  className={`flex flex-col items-start justify-start  ${
-                    index != 2 && "border-r"
-                  } pr-3`}
-                  key={index}
-                >
-                  <input
-                    className="text-sm p-3 mt-4 border border-violet-400 rounded-xl w-full mb-5 font-semibold border-b-4"
-                    value={pillar}
-                    onChange={() => {
-                      console.log("pillar", pillar);
-                    }}
-                  />
-
-                  <div className="flex flex-col items-start justify-center rounded space-y-4 py-2 px-1 text-sm">
-                    {pillars[pillar]?.map((topic, index) => (
-                      <div className="flex flex-col items-center justify-between space-x-2 py-2 px-1 text-sm w-full border-b2">
-                        <div
-                          className="flex items-center justify-between rounded space-x-2 py-2 px-1 text-sm w-full"
-                          key={index}
+              {pillars.length > 0 &&
+                pillars?.map((pillar, index) => (
+                  <div
+                    className={`flex flex-col items-start justify-start  ${
+                      index != 2 && "border-r"
+                    } pr-3`}
+                    key={index}
+                  >
+                    <label
+                      for="input-group-1"
+                      class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      Your Email
+                    </label>
+                    <div class="flex w-full">
+                      <div class="relative w-full">
+                        <input
+                          type="text"
+                          className="p-2.5 w-full z-20 text-sm rounded-lg border border-gray-300"
+                          placeholder={`Topic ${index + 1}`}
+                          onChange={(e) => {
+                            setPillars(
+                              pillars.map((item, i) =>
+                                i === index
+                                  ? { ...item, pillar: e.target.value }
+                                  : item
+                              )
+                            );
+                          }}
+                        />
+                        <button
+                          type="button"
+                          class="absolute top-0 right-0 p-2.5 text-sm font-medium text-white bg-violet-700 rounded-r-lg border border-violet-700 hover:bg-violet-800 focus:ring-4 focus:outline-none focus:ring-violet-300 dark:bg-violet-600 dark:hover:bg-violet-700 dark:focus:ring-violet-800"
+                          onClick={() => {
+                            generatePostIdeas(pillar.pillar, index);
+                          }}
                         >
-                          <h3 className="text-sm font-semibold text-gray-800">
-                            {topic.title}{" "}
-                          </h3>
-                          <button
-                            className="ml-1 p-1 text-white bg-violet-300 rounded-full"
-                            onClick={() => generatePost(topic.title, pillar)}
+                          <svg
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={1.5}
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true"
+                            className="w-5 h-5 transition duration-75 text-white"
                           >
-                            {topic.post ? (
-                              <svg
-                                fill="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                                aria-hidden="true"
-                                className="w-5 h-5"
-                              >
-                                <path
-                                  clipRule="evenodd"
-                                  fillRule="evenodd"
-                                  d="M4.755 10.059a7.5 7.5 0 0112.548-3.364l1.903 1.903h-3.183a.75.75 0 100 1.5h4.992a.75.75 0 00.75-.75V4.356a.75.75 0 00-1.5 0v3.18l-1.9-1.9A9 9 0 003.306 9.67a.75.75 0 101.45.388zm15.408 3.352a.75.75 0 00-.919.53 7.5 7.5 0 01-12.548 3.364l-1.902-1.903h3.183a.75.75 0 000-1.5H2.984a.75.75 0 00-.75.75v4.992a.75.75 0 001.5 0v-3.18l1.9 1.9a9 9 0 0015.059-4.035.75.75 0 00-.53-.918z"
-                                />
-                              </svg>
-                            ) : (
-                              "Generate"
-                            )}
-                          </button>
-                        </div>
-                        {topic.post && (
-                          <div className="text-2l text-gray-400 dark:text-gray-500 fomt-semibold w-full">
-                            <details className="flex flex-col items-start justify-start space-y-2 w-full">
-                              <summary className="flex items-center justify-center space-x-2 py-2 px-1 text-sm border- cursor-pointer">
-                                {topic.post.length > 50
-                                  ? topic.post.slice(0, 50) + "..."
-                                  : topic.post}
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* goes here */}
+                    <div className="flex flex-col items-start justify-center rounded space-y-4 py-2 px-1 text-sm">
+                      {pillar.ideas?.map((topic, index) => (
+                        <div className="flex flex-col items-center justify-between space-x-2 py-2 px-1 text-sm w-full border-b2">
+                          <div
+                            className="flex items-center justify-between rounded space-x-2 py-2 px-1 text-sm w-full"
+                            key={index}
+                          >
+                            <h3 className="text-sm font-semibold text-gray-800">
+                              {topic.title}{" "}
+                            </h3>
+                            <button
+                              className="ml-1 p-1 text-white bg-violet-300 rounded-full"
+                              onClick={() =>
+                                generatePost(topic.title, pillar.pillar)
+                              }
+                            >
+                              {topic.post ? (
                                 <svg
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth={1.5}
+                                  fill="currentColor"
                                   viewBox="0 0 24 24"
                                   xmlns="http://www.w3.org/2000/svg"
                                   aria-hidden="true"
                                   className="w-5 h-5"
                                 >
                                   <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                                    clipRule="evenodd"
+                                    fillRule="evenodd"
+                                    d="M4.755 10.059a7.5 7.5 0 0112.548-3.364l1.903 1.903h-3.183a.75.75 0 100 1.5h4.992a.75.75 0 00.75-.75V4.356a.75.75 0 00-1.5 0v3.18l-1.9-1.9A9 9 0 003.306 9.67a.75.75 0 101.45.388zm15.408 3.352a.75.75 0 00-.919.53 7.5 7.5 0 01-12.548 3.364l-1.902-1.903h3.183a.75.75 0 000-1.5H2.984a.75.75 0 00-.75.75v4.992a.75.75 0 001.5 0v-3.18l1.9 1.9a9 9 0 0015.059-4.035.75.75 0 00-.53-.918z"
                                   />
                                 </svg>
-                              </summary>
-                              <div className="flex flex-col items-start justify-start space-y-2 w-full">
-                                <div className="space-x-2 py-2 px-1 text-sm border-b whitespace-pre-wrap min-h-20 max-h-40 overflow-y-auto">
-                                  {topic.post}
-                                </div>
-                                <button
-                                  className="flex space-x-1 px-2 py-1 text-white bg-violet-300 rounded-full self-end"
-                                  onClick={() => setPost(topic)}
-                                >
-                                  <span>Edit </span>
+                              ) : (
+                                "Generate"
+                              )}
+                            </button>
+                          </div>
+                          {topic.post && (
+                            <div className="text-2l text-gray-400 dark:text-gray-500 fomt-semibold w-full">
+                              <details className="flex flex-col items-start justify-start space-y-2 w-full">
+                                <summary className="flex items-center justify-center space-x-2 py-2 px-1 text-sm border- cursor-pointer">
+                                  {topic.post.length > 50
+                                    ? topic.post.slice(0, 50) + "..."
+                                    : topic.post}
                                   <svg
-                                    fill="currentColor"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={1.5}
                                     viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg"
                                     aria-hidden="true"
                                     className="w-5 h-5"
                                   >
-                                    <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32l8.4-8.4z" />
-                                    <path d="M5.25 5.25a3 3 0 00-3 3v10.5a3 3 0 003 3h10.5a3 3 0 003-3V13.5a.75.75 0 00-1.5 0v5.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V8.25a1.5 1.5 0 011.5-1.5h5.25a.75.75 0 000-1.5H5.25z" />
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                                    />
                                   </svg>
-                                </button>
-                              </div>
-                            </details>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                                </summary>
+                                <div className="flex flex-col items-start justify-start space-y-2 w-full">
+                                  <div className="space-x-2 py-2 px-1 text-sm border-b whitespace-pre-wrap min-h-20 max-h-40 overflow-y-auto">
+                                    {topic.post}
+                                  </div>
+                                  <button
+                                    className="flex space-x-1 px-2 py-1 text-white bg-violet-300 rounded-full self-end"
+                                    onClick={() => setPost(topic)}
+                                  >
+                                    <span>Edit </span>
+                                    <svg
+                                      fill="currentColor"
+                                      viewBox="0 0 24 24"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      aria-hidden="true"
+                                      className="w-5 h-5"
+                                    >
+                                      <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32l8.4-8.4z" />
+                                      <path d="M5.25 5.25a3 3 0 00-3 3v10.5a3 3 0 003 3h10.5a3 3 0 003-3V13.5a.75.75 0 00-1.5 0v5.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V8.25a1.5 1.5 0 011.5-1.5h5.25a.75.75 0 000-1.5H5.25z" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </details>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {/* goes here */}
 
-                  <p className="text-2xl text-gray-400 dark:text-gray-500"></p>
-                </div>
-              ))}
+                    <p className="text-2xl text-gray-400 dark:text-gray-500"></p>
+                  </div>
+                ))}
             </div>
             {post && (
               <div className="grid grid-cols-6 gap-4 mb-4 col-span-3">
@@ -820,68 +818,14 @@ export default function Home() {
                     </button>
                   </div>
                 </div>
-                <div className="flex items-start justify-center h-[300px] rounded self-start border-l-2 pl-2">
-                  <p className="font-semibold text-gray-400 dark:text-gray-500 ">
-                    {isWeek ? "Monday" : "Jan"}
-                  </p>
-                </div>
-                <div className="flex items-start justify-center h-[300px] rounded self-start border-l-2 pl-2">
-                  <p className="font-semibold text-gray-400 dark:text-gray-500 ">
-                    {isWeek ? "Tuesday" : "Feb"}
-                  </p>
-                </div>
-                <div className="flex items-start justify-center h-[300px] mb-4 rounded self-start border-l-2 pl-2">
-                  <p className="font-semibold text-gray-400 dark:text-gray-500">
-                    {isWeek ? "Wednesday" : "Mar"}
-                  </p>
-                </div>
               </div>
             )}
           </div>
         </div>
 
+        {/*  */}
         <div className="flex flex-col items-center justify-start w-full h-full p-2 space-y-4 select-none bg-gray-100 pt-7 col-span-2">
-          <div className="flex items-center justify-center h16 rounded-full border border-gray-200 px0 w-ful self-center bg-gray-200 px-0">
-            <div
-              className="text-gray-400 dark:text-gray-500 px-0 cursor-pointer transition duration-200 ease-in-out"
-              onClick={handleTrending}
-            >
-              <div className="flex items-center px-0">
-                <span
-                  className={`mr-2 flex rounded-full p-2 select-none ${
-                    isTrending
-                      ? "text-gray-800 font-semibold bg-white"
-                      : "text-gray-300"
-                  }`}
-                >
-                  🔥Trending
-                </span>
-                <span
-                  className={`ml-2 rounded-full p-2 select-none px-4 ${
-                    isTrending
-                      ? "text-gray-300"
-                      : "text-gray-800 font-semibold bg-white"
-                  }`}
-                >
-                  🏢
-                </span>
-              </div>
-            </div>
-          </div>
           <div className="flex flex-col items-start justify-center space-y-3 w-full">
-            <div className="flex items-center justify-center space-x-2">
-              <input
-                type="checkbox"
-                className="w-5 h-5"
-                onChange={() => {
-                  setIncludePastPosts(!includePastPosts);
-                }}
-              />
-
-              <p className="text-sm text-gray-400 dark:text-gray-500">
-                Include Past Posts
-              </p>
-            </div>
             <div className="flex items-center justify-center space-x-2">
               <button
                 className="px-3 py-1 text-white bg-violet-500 rounded-full flex items-center"
@@ -931,7 +875,7 @@ export default function Home() {
             </button> */}
           </div>
 
-          {includePastPosts && posts?.length > 0 && (
+          {posts?.length > 0 && (
             <div className="flex flex-col items-start justify-center space-y-3 w-full">
               <div className="flex flex-col items-center p-1 justify-start space-y-5 overflow-y-scroll w-full shadow bg-gray-50 border-gray-300 rounded-lg">
                 {posts.map((post, index) => (
@@ -972,8 +916,8 @@ export default function Home() {
             </div>
           )}
         </div>
+        {/*  */}
       </div>
     </>
   );
-  // }
 }

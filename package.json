@@ -13,6 +13,7 @@
     "@supabase/auth-ui-react": "^0.3.5",
     "@supabase/supabase-js": "^2.21.0",
     "@vercel/edge-config": "^0.1.7",
+    "cookies-next": "^2.1.1",
     "dotenv": "^16.0.3",
     "eventsource-parser": "^1.0.0",
     "next": "13.2.4",
