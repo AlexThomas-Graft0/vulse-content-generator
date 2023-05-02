@@ -756,7 +756,7 @@ export default function Home() {
                     value={post.post}
                     onChange={(e) => setPost(e.target.value)}
                   />
-                  <div className="flex flex-row items-center justify-between">
+                  {/* <div className="flex flex-row items-center justify-between">
                     {[0, 1, 2].map((i, ni) => (
                       <div
                         className="flex flex-col items-center justify-center p-2 my-3 mr-3 text-xl shadow-md w-[100px] h-[100px] bg-g0 border-2 border-gray-300 border-dashed rounded whitespace-pre-wrap"
@@ -816,7 +816,7 @@ export default function Home() {
                     <button className="py-1 px-5 rounded-full border-2 border-violet-600 text-gray-600">
                       Schedule
                     </button>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             )}
