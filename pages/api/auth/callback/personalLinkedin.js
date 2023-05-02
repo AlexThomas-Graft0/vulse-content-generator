@@ -1,5 +1,3 @@
-
-
 import { getURLWithQueryParams } from "../../../../helpers/personalAuth";
 
 const personalLinkedin = async (req, res) => {
@@ -69,7 +67,7 @@ const personalLinkedin = async (req, res) => {
       Date.now() + expires_in * 1000
     ).toUTCString()}; path=/; HttpOnly`
   );
-  res.redirect("http://localhost:3000");
+  res.redirect("https://vulse-content-generator.vercel.app");
 
   //   // Set cookie
   res.setHeader(

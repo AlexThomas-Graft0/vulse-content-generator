@@ -98,9 +98,11 @@ export default function Home() {
         personal: personalPersonality,
       };
       console.log({ newPersonalities });
-      setPersonalities(newPersonalities);
 
+      setPersonalities(newPersonalities);
       setPersonalPosts(posts);
+      setPersonality("personal");
+      setPosts(posts);
     };
 
     if (cookies.access_token) {

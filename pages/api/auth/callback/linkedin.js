@@ -97,7 +97,7 @@ const linkedin = async (req, res) => {
   //
 
   //redirect to home page
-  res.redirect("http://localhost:3000");
+  res.redirect("https://vulse-content-generator.vercel.app/");
 
   //   // Set cookie
   //   res.setHeader(
