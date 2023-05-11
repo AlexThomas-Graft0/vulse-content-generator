@@ -9,7 +9,15 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        vulseBlue: "#061A55",
+        vulseCyan: "#2AE2DF",
+        vulsePurple: "#8155FF",
+        vulseRed: "#F34C50",
+        vulseOrange: "#F9995B",
+      },
+    },
   },
   plugins: [],
 };

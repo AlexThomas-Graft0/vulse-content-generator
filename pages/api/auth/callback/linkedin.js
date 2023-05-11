@@ -32,6 +32,17 @@ const linkedin = async (req, res) => {
   console.log("access_tokennn", access_token);
   setCookie("access_token", access_token, { req, res, maxAge: 60 * 60 * 24 });
 
+  const userInfoDataUrl = "https://api.linkedin.com/v2/userInfo";
+  const userInfoDataResponse = await fetch(userInfoDataUrl, {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer " + access_token,
+      "X-Restli-Protocol-Version": "2.0.0",
+    },
+  });
+  const userInfoData = await userInfoDataResponse.json();
+  console.log({ userInfoData });
+
   const meDataUrl = "https://api.linkedin.com/v2/me";
   const meDataResponse = await fetch(meDataUrl, {
     method: "GET",
@@ -45,21 +56,21 @@ const linkedin = async (req, res) => {
   const userID = userData.id;
   setCookie("userData", userData, { req, res, maxAge: 60 * 60 * 24 });
 
-  // const orgInfoUrl =
-  //   "https://api.linkedin.com/v2/organizationalEntityAcls?q=roleAssignee&role=ADMINISTRATOR&projection=(elements*(organizationalTarget~(localizedName)))";
-  // const orgInfoResponse = await fetch(orgInfoUrl, {
-  //   method: "GET",
-  //   headers: {
-  //     Authorization: "Bearer " + access_token,
-  //     "X-Restli-Protocol-Version": "2.0.0",
-  //   },
-  // });
-  // const orgInfo = await orgInfoResponse.json();
-  // // console.log(orgInfo.elements);
+  const orgInfoUrl =
+    "https://api.linkedin.com/v2/organizationalEntityAcls?q=roleAssignee&role=ADMINISTRATOR&projection=(elements*(organizationalTarget~(localizedName)))";
+  const orgInfoResponse = await fetch(orgInfoUrl, {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer " + access_token,
+      "X-Restli-Protocol-Version": "2.0.0",
+    },
+  });
+  const orgInfo = await orgInfoResponse.json();
+  // console.log(orgInfo.elements);
 
-  // const orgURN = orgInfo.elements[0].organizationalTarget;
-  // const orgID = orgURN.split(":")[3];
-  // console.log({ orgURN, orgID });
+  const orgURN = orgInfo.elements[0].organizationalTarget;
+  const orgID = orgURN.split(":")[3];
+  console.log({ orgURN, orgID });
 
   //
   // const vulseOrgID = "42473684";

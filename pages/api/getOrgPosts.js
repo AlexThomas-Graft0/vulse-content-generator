@@ -18,7 +18,8 @@ const getPosts = async (req, res, access_token) => {
   });
   const orgInfo = await orgInfoResponse.json();
 
-  // const orgURN = orgInfo.elements[0].organizationalTarget;
+  console.log({ orgInfo });
+  const orgURN = orgInfo.elements[0].organizationalTarget;
   const vulseOrgID = "42473684";
 
   //TODO change this back to orgURN instead of vulse

@@ -1,3 +1,34 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.toggle-checkbox:checked {
+  top: 0;
+  right: 0;
+  border-color: #4f46e5;
+  background-color: #4f46e5;
+}
+
+.toggle-checkbox:checked + .toggle-label {
+  background-color: #a78bfa;
+}
+
+.toggle-checkbox:focus + .toggle-label {
+  box-shadow: 0 0 2px 3px rgba(34, 35, 58, 0.4);
+}
+
+.toggle-checkbox:checked:focus + .toggle-label {
+  box-shadow: 0 0 2px 3px rgba(34, 35, 58, 0.4);
+}
+
+.toggle-label {
+  width: 1.75rem;
+  height: 0.875rem;
+}
+
+.toggle-checkbox {
+  width: 1rem;
+  height: 1rem;
+  right: 0.4375rem;
+  top: -0.0625rem;
+}
