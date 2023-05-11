@@ -352,7 +352,7 @@ export default function Home() {
     The subject of the post is: {subject}.`;
 
     console.log({ newVulsePrompt });
-    return;
+    // return;
 
     const newPillars = Object.assign([], pillars);
 
