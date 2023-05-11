@@ -41,22 +41,24 @@ const personalLinkedin = async (req, res) => {
   console.log({ userData });
   const vanityName = userData.vanityName;
 
-  const url = `https://fresh-linkedin-profile-data.p.rapidapi.com/get-profile-posts?linkedin_url=https%3A%2F%2Fwww.linkedin.com%2Fin%2F${vanityName}%2F1`;
-  const options = {
-    method: "GET",
-    headers: {
-      "X-RapidAPI-Key": "45846aa565mshc6b0830f56f2d81p13888cjsn796c02cc1797",
-      "X-RapidAPI-Host": "fresh-linkedin-profile-data.p.rapidapi.com",
-    },
-  };
+  
 
-  try {
-    const response = await fetch(url, options);
-    const result = await response.json();
-    console.log(result.count);
-  } catch (error) {
-    console.error(error);
-  }
+  // const url = `https://fresh-linkedin-profile-data.p.rapidapi.com/get-profile-posts?linkedin_url=https%3A%2F%2Fwww.linkedin.com%2Fin%2F${vanityName}%2F1`;
+  // const options = {
+  //   method: "GET",
+  //   headers: {
+  //     "X-RapidAPI-Key": "45846aa565mshc6b0830f56f2d81p13888cjsn796c02cc1797",
+  //     "X-RapidAPI-Host": "fresh-linkedin-profile-data.p.rapidapi.com",
+  //   },
+  // };
+
+  // try {
+  //   const response = await fetch(url, options);
+  //   const result = await response.json();
+  //   console.log(result.count);
+  // } catch (error) {
+  //   console.error(error);
+  // }
 
   //
 

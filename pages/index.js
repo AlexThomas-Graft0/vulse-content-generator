@@ -3,6 +3,7 @@ import Head from "next/head";
 import React, { useEffect, useRef, useState } from "react";
 import LinkedInAuth from "../components/LinkedInAuth";
 import { LINKEDIN_URL } from "../helpers/auth";
+import { PESRONAL_LINKEDIN_URL } from "../helpers/personalAuth";
 
 //needs to take in linkedin posts from the user
 // -- test by feeding them in
@@ -80,9 +81,80 @@ export default function Home() {
 
   const [personalPosts, setPersonalPosts] = useState([]);
 
+  const tones = [
+    "professional",
+    "casual",
+    "funny",
+    "serious",
+    "friendly",
+    "sarcastic",
+    "informative",
+    "persuasive",
+    "inspirational",
+    "motivational",
+    "educational",
+    "controversial",
+    "conversational",
+    "engaging",
+    "thought-provoking",
+    "emotional",
+  ];
+  const [headline, setHeadline] = useState("");
+  const [tone, setTone] = useState("professional");
+
+  const languages = ["English", "French", "German", "Spanish", "Italian"];
+  const [language, setLanguage] = useState("English");
+
+  const [isWeek, setIsWeek] = useState(true);
+  const [isTrending, setIsTrending] = useState(true);
+
+  const [personality, setPersonality] = useState("linkedIn");
+  const [personalities, setPersonalities] = useState({
+    blank: [{ content: "" }],
+  });
+
+  const blankPersonality = [{ content: "" }];
+
+  const [posts, setPosts] = useState(blankPersonality);
+
+  const [vulsePrompt, setVulsePrompt] = useState(``);
+
+  useEffect(() => {
+    console.log("here");
+    console.log({ headline, tone, language });
+    // setVulsePrompt(
+    //   "You are a {headline} writing posts for your personal profile on the social media platform: LinkedIn"
+    // );
+
+    // The users LinkedIn profile description is: {description}. <-- stripped out because we can't get bio
+    // The user works in the {sector} industry. <-- stripped out because we can't get job history
+    setVulsePrompt(`You are a ${headline} writing posts for your personal profile on the social media platform: LinkedIn
+    The post MUST follow these rules:
+    - The post should have a short opening sentence not more than 350 characters.
+    - The opening sentence must be followed by a line break.
+    - The post should be no more than 3000 characters.
+    - Separate each sentence with a line break.
+    - The post should be written in the first person.
+    - The post should be written in the present tense.
+    - There should be no more than 3 hashtags, these should be relevant to the post copy.
+    - Hashtags should be at the end of the post
+    Posts should be ${tone}.
+    The language should be ${language}.
+
+    The users LinkedIn headline is: ${headline}.
+
+    An example of a previous post by the user is:
+    -------
+    ${posts ? posts?.map((post) => post.content).join("\n") : ""}
+    -------
+
+    The style of the new post should be similar to the example.
+    The subject of the post is: {subject}.`);
+  }, [tone, headline, language, posts]);
+
   useEffect(() => {
     const cookies = getCookies();
-    console.log({ cookies });
+    // console.log({ cookies });
 
     const getPosts = async () => {
       const postUrl = `/api/getOrgPosts?access_token=${cookies.access_token}`;
@@ -111,10 +183,14 @@ export default function Home() {
 
     if (cookies.userData) {
       setSession(JSON.parse(decodeURIComponent(cookies.userData)));
+      setHeadline(
+        JSON.parse(decodeURIComponent(cookies.userData)).localizedHeadline
+      );
     }
   }, []);
 
   const handleSubmit = async (e) => {
+    console.log(`submitting`);
     setLoading(true);
     e.preventDefault();
 
@@ -173,7 +249,32 @@ export default function Home() {
     setLoading(false);
   };
 
+  // tones
+
+  const handleChangeTone = (e) => {
+    setTone(e.target.value);
+  };
+
+  const handleChangeLanguage = (e) => {
+    setLanguage(e.target.value);
+  };
+
+  const handleChangeHeadline = (e) => {
+    setHeadline(e.target.value);
+  };
+
+  const handleChangePrompt = (e) => {
+    setVulsePrompt(e.target.value);
+  };
+
+  // tones
+
+  console.log({ session });
+
   const generatePostIdeas = async (topic, index) => {
+    //setPillars, add loading to topic
+    console.log({ topic });
+
     const userMessage = {
       role: "user",
       content: topic,
@@ -225,6 +326,34 @@ export default function Home() {
   };
 
   const generatePost = async (topic, postPillar) => {
+    const newVulsePrompt = `You are a ${headline} writing posts for your personal profile on the social media platform: LinkedIn
+    The post MUST follow these rules:
+    - The post should have a short opening sentence not more than 350 characters.
+    - The opening sentence must be followed by a line break.
+    - The post should be no more than 3000 characters.
+    - Separate each sentence with a line break.
+    - The post should be written in the first person.
+    - The post should be written in the present tense.
+    - There should be no more than 3 hashtags, these should be relevant to the post copy.
+    - Hashtags should be at the end of the post
+    Posts should be ${tone}.
+    The language should be ${language}.
+    The user works in the {sector} industry.
+    The users LinkedIn profile description is: {description}.
+    
+    The users LinkedIn headline is: {headline}.
+    
+    An example of a previous post by the user is:
+    ------- 
+    ${posts ? posts?.map((post) => post.content).join("\n") : ""}
+    -------
+  
+    The style of the new post should be similar to the example.
+    The subject of the post is: {subject}.`;
+
+    console.log({ newVulsePrompt });
+    return;
+
     const newPillars = Object.assign([], pillars);
 
     pillars.forEach((pillar, pi) => {
@@ -318,12 +447,9 @@ export default function Home() {
     setLoading(false);
   };
 
-  const handleSetModel = (e) => {
-    setModel(e.target.value);
-  };
-
-  const [isWeek, setIsWeek] = useState(true);
-  const [isTrending, setIsTrending] = useState(true);
+  // const handleSetModel = (e) => {
+  //   setModel(e.target.value);
+  // };
 
   const handleToggle = () => {
     setIsWeek(!isWeek);
@@ -333,102 +459,10 @@ export default function Home() {
     setIsTrending(!isTrending);
   };
 
-  const [personality, setPersonality] = useState("linkedIn");
-  const [personalities, setPersonalities] = useState({
-    oldEnglish: [
-      {
-        content:
-          "Ah, 'tis a delightful mornin', the sun's rays beamin' through yonder window. A gentle breeze caressin' the bloomin' flora, 'tis a sight fit for the eyes of poets and dreamers alike. The world be full of wonder, and each day bringeth new blessings to those who seeketh them.",
-      },
-      {
-        content:
-          "Pray, heed the call of the wild, the whispers of the ancient trees, for they have much wisdom to share. In their boughs, they cradle the secrets of time immemorial, only to be revealed to those with a heart open to their counsel. Nature's embrace, a balm for our weary souls.",
-      },
-      {
-        content:
-          "Forsooth, life be a grand tapestry, woven with threads of joy and sorrow, love and loss, triumph and defeat. Each stitch, an experience that shapes our character, a testament to the beauty of our collective journey. The human condition, a symphony of raw emotion, playin' to the rhythm of fate.",
-      },
-      {
-        content:
-          "In this garden of life, let us sow seeds of kindness and compassion, waterin' them with the dew of understanding. As our hearts intertwine, we'll create a haven where love blossoms and the spirit soars, a sanctuary where we may find solace in the embrace of our brethren.",
-      },
-    ],
-    newEnglish: [
-      {
-        content:
-          "Oh em gee, you guys! This morning was, like, totally #blessed! The sun was out, and it was seriously giving me all the good vibes. I couldn't help but snap a pic for the 'gram. Honestly, life is just so perf sometimes, am I right?",
-      },
-      {
-        content:
-          "And OMG, have you ever stopped to, like, listen to the trees? No joke, it's like they're whispering all their ancient secrets to us. I know it sounds cray-cray, but it's actually super deep if you think about it. Nature is literally the best therapist, no cap.",
-      },
-      {
-        content:
-          "So, like, life is basically this huge, crazy tapestry, right? We've got our highs and lows, our wins and losses, but it all comes together in this beautiful, messy masterpiece. It's like one big, emotional roller coaster, and we're all just along for the ride.",
-      },
-      {
-        content:
-          "But seriously, guys, let's try to spread some love and positivity out there, okay? It's all about lifting each other up and making the world a better place. We can totally do it if we stick together and keep those good vibes going. #SpreadLove #GoodVibesOnly",
-      },
-    ],
-    linkedIn: [
-      {
-        content: `Rise and Grind: Seize the Day! 🌅
-      Nature's Wisdom: Unlocking Success 🌳
-      
-      Today, I was inspired by the stunning sunrise, reminding us all of the endless possibilities each new day brings. 🌞 As we embark on our daily tasks, let's not forget to pause and appreciate the lessons nature can teach us. Ancient trees, for example, hold a wealth of wisdom and offer a sense of perspective that can be invaluable in both our personal and professional lives. 🌲
-      
-      In this fast-paced world, it's essential to remember that life is a tapestry of successes and setbacks, and embracing these experiences helps us grow and develop as individuals. 💼 Let's foster a culture of empathy, compassion, and collaboration in our workplaces to create an environment that nurtures growth, innovation, and success. 💡
-      
-      What are some ways you maintain a work-life balance while pursuing your professional goals? Share your thoughts in the comments! 👇
-      
-      #CarpeDiem #GrowthMindset #Collaboration`,
-      },
-      {
-        content: `Fuel Your Day: Morning Motivation ☕
-        Productivity Boosters: Share Yours! 💪
-        
-        Starting the day with a positive mindset can make all the difference in our productivity levels. 🌟 Whether it's a strong cup of coffee or a motivating podcast, we all have our go-to morning rituals. Embracing these routines can set the stage for a successful day ahead. ⏰
-        
-        Let's also consider the power of collaboration and teamwork in our professional lives. By pooling our skills and resources, we can achieve greater heights and overcome challenges more effectively. 🚀
-        
-        What's your favorite morning ritual to jumpstart your day? Share your tips and tricks in the comments below! 🌅
-        
-        #MorningRoutines #Productivity #Teamwork`,
-      },
-      {
-        content: `Building Connections: Networking Tips 🤝
-      Maximize Your Opportunities 🌐
-      
-      In today's interconnected world, networking is key to unlocking new professional opportunities. Building meaningful connections can lead to exciting collaborations, career advancements, and personal growth. 🌱
-      
-      When it comes to networking, remember that it's not just about collecting contacts - it's about nurturing relationships and offering value to others. 💼
-      
-      How do you approach networking, and what strategies have you found most effective? Let's discuss and learn from each other in the comments! ✍️
-      
-      #NetworkingTips #CareerGrowth #BuildingRelationships`,
-      },
-      {
-        content: `Time Management: Mastering the Clock ⌛
-      Efficiency Hacks: Let's Swap Ideas! ⚡
-      
-      In the race against time, effective time management is a crucial skill to develop. By mastering the art of prioritization and organization, we can optimize our productivity and make the most of every day. 📅
-      
-      Whether it's setting deadlines, using productivity apps, or minimizing distractions, there are countless strategies to maximize efficiency. ⏳
-      
-      What are your go-to time management techniques? Share your insights in the comments, and let's help each other become more efficient! 💼
-      
-      #TimeManagement #ProductivityHacks #WorkSmarter`,
-      },
-    ],
-  });
-
   const handleChangePersonality = (e) => {
     setPersonality(e.target.value);
     setPosts(personalities[e.target.value]);
   };
-
-  const [posts, setPosts] = useState(personalities.linkedIn);
 
   const handleNewPost = (e) => {
     e.preventDefault();
@@ -459,6 +493,14 @@ export default function Home() {
   const image1Ref = useRef(null);
   const image2Ref = useRef(null);
   const image3Ref = useRef(null);
+
+  function handleSetModel(e) {
+    if (e.target.checked) {
+      setModel("gpt-4");
+    } else {
+      setModel("gpt-3.5-turbo");
+    }
+  }
 
   return (
     <>
@@ -494,20 +536,20 @@ export default function Home() {
       <div className="grid grid-cols-12 gap-4 h-full min-h-screen">
         <div className="p-5 sm:ml64 col-span-10">
           <div className="">
-            <div className="grid grid-cols-2 2xl:grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-2 2xl:grid-cols-3 gap-4 mb-">
               <div className="flex items-center justify-between space-x-5 rounded">
                 <h1 className="text-3xl font-bold text-gray-400 dark:text-slate-800">
                   Themes
                 </h1>
               </div>
-              <div className="flex items-center justify-end space-x-2 h-24 rounded">
+              <div className="flex items-center justify-end space-x-2 rounded">
                 {/* <LinkedInAuth /> */}
                 {/* <PersonalConnect /> */}
               </div>
               <div className="flex items-center justify-end space-x-2 h-24 rounded">
                 {session ? (
                   <button
-                    className="flex items-center space-x-2 text font-semibold text-gray-400 dark:text-violet-500"
+                    className="flex items-center space-x-2 text font-semibold text-gray-400 dark:text-vulsePurple"
                     onClick={() => signOut()}
                   >
                     <span>
@@ -527,7 +569,7 @@ export default function Home() {
                         viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg"
                         aria-hidden="true"
-                        className="w-5 h-5 transition duration-75 text-violet-400 group-hover:text-gray-500"
+                        className="w-5 h-5 transition duration-75 text-vulsePurple group-hover:text-gray-500"
                       >
                         <path
                           strokeLinecap="round"
@@ -560,46 +602,28 @@ export default function Home() {
                     </svg>
                   </a>
                 )}
+                {/* <a
+                  className="flex items-center space-x-2 text font-semibold text-gray-400 dark:text-slate-500 hover:text-gray-500 cursor-pointer"
+                  href={PESRONAL_LINKEDIN_URL}
+                >
+                  Connect Personal Account
+                  <svg
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                    className="w-5 h-5 transition duration-75 text-gray-400 group-hover:text-gray-500"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                    />
+                  </svg>
+                </a> */}
               </div>
-            </div>
-            <div className="flex flex-col items-start justify-center w-full h-full p- space-y-2 ">
-              <h3 className="text-2xl font-semibold text-gray-400 dark:text-gray-500 text-center">
-                Generate New Themes
-              </h3>
-              <form
-                className="flex flex-l items-center justify-start w-full space-x-3"
-                onSubmit={handleSubmit}
-              >
-                <label className="text-gray-400 dark:text-gray-500">
-                  Priority
-                </label>
-                <select
-                  className="p-3 text-x border rounded-xl"
-                  onChange={handleSetModel}
-                >
-                  <option value="gpt-4" defaultValue>
-                    Quality
-                  </option>
-                  <option value="gpt-3.5-turbo">Speed</option>
-                </select>
-                {/* <input
-                  type="text"
-                  placeholder="topic"
-                  className="w-100 p-3 text-x border rounded-xl"
-                  onChange={(e) => {
-                    setMessage(e.target.value);
-                  }}
-                  value={message}
-                  required
-                />
-
-                <button
-                  className="px-3 py-1 text-x text-white bg-violet-500 rounded-full"
-                  type="submit"
-                >
-                  {loading ? "Loading..." : "Generate"}
-                </button> */}
-              </form>
             </div>
             <div className="grid grid-cols-3 gap-4 mb-4 border-b py-3">
               {pillars.length > 0 &&
@@ -611,13 +635,13 @@ export default function Home() {
                     key={index}
                   >
                     <label
-                      for="input-group-1"
-                      class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                      htmlFor="input-group-1"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                     >
                       Your Email
                     </label>
-                    <div class="flex w-full">
-                      <div class="relative w-full">
+                    <div className="flex w-full">
+                      <div className="relative w-full">
                         <input
                           type="text"
                           className="p-2.5 w-full z-20 text-sm rounded-lg border border-gray-300"
@@ -634,26 +658,47 @@ export default function Home() {
                         />
                         <button
                           type="button"
-                          class="absolute top-0 right-0 p-2.5 text-sm font-medium text-white bg-violet-700 rounded-r-lg border border-violet-700 hover:bg-violet-800 focus:ring-4 focus:outline-none focus:ring-violet-300 dark:bg-violet-600 dark:hover:bg-violet-700 dark:focus:ring-violet-800"
+                          className="absolute top-0 right-0 p-2.5 text-sm font-medium text-white bg-vulsePurple rounded-r-lg border border-vulsePurple hover:bg-violet-800 focus:ring-4 focus:outline-none focus:ring-violet-300 dark:bg-vulsePurple dark:hover:bg-vulsePurple dark:focus:ring-vulsePurple"
                           onClick={() => {
                             generatePostIdeas(pillar.pillar, index);
                           }}
                         >
-                          <svg
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={1.5}
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                            aria-hidden="true"
-                            className="w-5 h-5 transition duration-75 text-white"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
-                            />
-                          </svg>
+                          {pillar.loading ? (
+                            <svg
+                              className="animate-spin h-5 w-5 text-white"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                              ></path>
+                            </svg>
+                          ) : (
+                            <svg
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={1.5}
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                              aria-hidden="true"
+                              className="w-5 h-5 transition duration-75 text-white"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
+                              />
+                            </svg>
+                          )}
                         </button>
                       </div>
                     </div>
@@ -670,12 +715,14 @@ export default function Home() {
                               {topic.title}{" "}
                             </h3>
                             <button
-                              className="ml-1 p-1 text-white bg-violet-300 rounded-full"
+                              className={`ml-1 p-1 text-white bg-violet-300 rounded-full ${
+                                topic.loading && "animate-spin"
+                              }`}
                               onClick={() =>
                                 generatePost(topic.title, pillar.pillar)
                               }
                             >
-                              {topic.post ? (
+                              {topic.post || topic.loading ? (
                                 <svg
                                   fill="currentColor"
                                   viewBox="0 0 24 24"
@@ -754,7 +801,7 @@ export default function Home() {
               <div className="grid grid-cols-6 gap-4 mb-4 col-span-3">
                 <div className="flex flex-col items-start justify-center col-span-3 space-y-3">
                   <textarea
-                    className="w-full p-2 text-xs border rounded shadow-md min-h-[100px] max-h-[300px] focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent"
+                    className="w-full p-2 text-xs border rounded shadow-md min-h-[200px] max-h-[500px] focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent"
                     value={post.post}
                     onChange={(e) => setPost(e.target.value)}
                   />
@@ -827,39 +874,48 @@ export default function Home() {
 
         {/*  */}
         <div className="flex flex-col items-center justify-start w-full h-full p-2 space-y-4 select-none bg-gray-100 pt-7 col-span-2">
+          <div className="flex flex-col items-start justify-center space-y-3 w-full"></div>
+
+          {/*  */}
           <div className="flex flex-col items-start justify-center space-y-3 w-full">
-            <div className="flex items-center justify-center space-x-2">
-              <button
-                className="px-3 py-1 text-white bg-violet-500 rounded-full flex items-center"
-                onClick={handleNewPost}
+            <h3 className="text-sm text-gray-400 dark:text-gray-500 font-semibold">
+              Priority
+            </h3>
+
+            <div className="flex items-center">
+              <span
+                className={`text-sm font-medium ${
+                  model === "gpt-3.5-turbo"
+                    ? "text-vulsePurple"
+                    : "text-gray-400"
+                }`}
               >
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                  className="w-5 h-5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 6v12m6-6H6"
-                  />
-                </svg>
-                <span className="text-xs">New Post</span>
-              </button>
+                Quality
+              </span>
+              <label className="relative inline-flex items-center cursor-pointer mx-2">
+                <input
+                  type="checkbox"
+                  value=""
+                  className="sr-only peer"
+                  onChange={handleSetModel}
+                />
+                <div className="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:bor2er-gray-600 peer-checked:bg-vulsePurple"></div>
+              </label>
+              <span
+                className={`text-sm font-medium ${
+                  model === "gpt-4" ? "text-vulsePurple" : "text-gray-400"
+                }`}
+              >
+                Speed
+              </span>
             </div>
           </div>
 
-          {/*  */}
-
           <div className="flex flex-col items-center space-y-2 justify-center w-full">
-            <div className="flex flex-col items-start justify-center space-y-3 w-full">
-              <p className="text-sm text-gray-400 dark:text-gray-500">
+            <div className="flex flex-col items-start justify-center space-y-3 w-full mt-5">
+              <h3 className="text-sm text-gray-400 dark:text-gray-500 font-semibold">
                 Personality
-              </p>
+              </h3>
               <select
                 className="w-full p-3 mt- text-xs border rounded-lg"
                 onChange={handleChangePersonality}
@@ -877,6 +933,30 @@ export default function Home() {
             </button> */}
           </div>
 
+          <div className="flex items-center justify-center space-x-2 self-start">
+            <button
+              className="px-3 py-1 text-white bg-violet-500 rounded-full flex items-center"
+              onClick={handleNewPost}
+            >
+              <svg
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+                className="w-5 h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 6v12m6-6H6"
+                />
+              </svg>
+              <span className="text-xs">New Post</span>
+            </button>
+          </div>
+
           {posts?.length > 0 && (
             <div className="flex flex-col items-start justify-center space-y-3 w-full">
               <div className="flex flex-col items-center p-1 justify-start space-y-5 overflow-y-scroll w-full shadow bg-gray-50 border-gray-300 rounded-lg">
@@ -887,7 +967,7 @@ export default function Home() {
                   >
                     <textarea
                       key={index}
-                      className="w-full p-1 mt- text-xs border rounded-lg h-[100px] focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent focus:h-[300px] resize-none transform transition-all duration-600 ease-in-out"
+                      className="w-full p-1 mt- text-xs border rounded-lg h-[75px] focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent focus:h-[200px] resize-none transform transition-all duration-600 ease-in-out"
                       value={post.content}
                       onChange={(e) => handlePostChange(e, index)}
                     />
@@ -917,6 +997,67 @@ export default function Home() {
               </div>
             </div>
           )}
+
+          {/*  */}
+          <div className="flex flex-col items-start justify-center space-y-3 w-full">
+            <h3 className="text-sm text-gray-400 dark:text-gray-500 font-semibold mt-5">
+              Modify Prompt
+            </h3>
+            <div className="flex flex-col items-start justify-center space-y-3 w-full">
+              <label className="text-xs text-gray-400 dark:text-gray-500 font-semibold">
+                Tone
+              </label>
+              <select
+                className="w-full p-3 mt- text-xs border rounded-lg"
+                onChange={handleChangeTone}
+                value={tone}
+              >
+                {tones.map((toneOption, index) => (
+                  <option key={index} value={toneOption}>
+                    {toneOption}
+                  </option>
+                ))}
+              </select>
+
+              <label className="text-xs text-gray-400 dark:text-gray-500 font-semibold">
+                Language
+              </label>
+              <select
+                className="w-full p-3 mt- text-xs border rounded-lg"
+                onChange={handleChangeLanguage}
+                value={language}
+              >
+                {languages.map((languageOption, index) => (
+                  <option key={index} value={languageOption}>
+                    {languageOption}
+                  </option>
+                ))}
+              </select>
+
+              <label className="text-xs text-gray-400 dark:text-gray-500 font-semibold">
+                Headline - {headline}
+              </label>
+              <input
+                className="w-full p-3 mt- text-xs border rounded-lg"
+                value={headline}
+                onChange={handleChangeHeadline}
+              />
+
+              <label className="text-xs text-gray-400 dark:text-gray-500 font-semibold">
+                Prompt
+              </label>
+              <textarea
+                className="w-full p-3 mt- text-xs border rounded-lg h-[500px] focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent focus:h-[300px] resize-none transform transition-all duration-600 ease-in-out"
+                value={vulsePrompt}
+                onChange={handleChangePrompt}
+              />
+
+              {/* <button className="px-3 py-1 text-white bg-violet-500 rounded-full flex items-center">
+                Save
+              </button> */}
+            </div>
+          </div>
+          {/*  */}
         </div>
         {/*  */}
       </div>
