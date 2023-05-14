@@ -1,10 +1,5 @@
 import { getURLWithQueryParams } from "../../helpers/auth"; // import Spinner from "../../assets/icons/Spinner";
 
-const Spinner = () => (
-  <div className="flex justify-center items-center h-screen">
-    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-t-2 border-gray-900"></div>
-  </div>
-);
 const Oauth = async (req, res) => {
   const LINKEDIN_URL = getURLWithQueryParams(
     "https://www.linkedin.com/oauth/v2/accessToken",
@@ -35,9 +30,10 @@ const Oauth = async (req, res) => {
 
   console.log("access_token", access_token);
 
+  //needs permissions
   // Fetch posts
   //   const postUrl = "https://api.linkedin.com/v2/posts";
-  //   const postUrl =
+  //   const userInfoUrl =
   //     "https://api.linkedin.com/v2/userinfo";
   //   const response = await fetch(postUrl, {
   //     method: "GET",

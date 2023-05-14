@@ -1,5 +1,6 @@
 import { OpenAIStream } from "../../utils/OpenAIStream";
 
+//old prompt I wrote
 const systemPrompt = {
   role: "system",
   content: `You are a system designed to generate a 3 LinkedIn posts based on 3 different content pillars for users based on their desired topic.

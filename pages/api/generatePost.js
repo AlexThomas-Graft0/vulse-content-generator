@@ -1,10 +1,9 @@
 import { OpenAIStream } from "../../utils/OpenAIStream";
 
-// content: `Analyse the following LinkedInPosts and generate a compelling LinkedIn post. Ensure that you provide diverse and engaging content ideas while considering the user's preferences. Every post must end with 3 relevant and popular hastags. `,
-const systemPrompt = {
-  role: "system",
-  content: `You are a system designed to generate a 3 LinkedIn posts based on 3 different content pillars for users based on their desired topic in the users writing style.`,
-};
+// const systemPrompt = {
+//   role: "system",
+//   content: `You are a system designed to generate a LinkedIn post for users based on their desired topic in the users writing style.`,
+// };
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("Missing env var from OpenAI");
@@ -23,7 +22,7 @@ async function POST(req) {
 
   const payload = {
     model: model || "gpt-3.5-turbo",
-    messages: [systemPrompt, ...messages],
+    messages: [...messages],
     temperature: 0.7,
     top_p: 1,
     frequency_penalty: 0,

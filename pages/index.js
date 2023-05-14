@@ -1,255 +1,95 @@
 import { deleteCookie, getCookies } from "cookies-next";
 import Head from "next/head";
-import React, { useEffect, useRef, useState } from "react";
-import LinkedInAuth from "../components/LinkedInAuth";
+import React, { useEffect, useState } from "react";
+import languages from "../consts/languages";
+import tones from "../consts/tones";
 import { LINKEDIN_URL } from "../helpers/auth";
-import { PESRONAL_LINKEDIN_URL } from "../helpers/personalAuth";
-
-//needs to take in linkedin posts from the user
-// -- test by feeding them in
-// -- then allow login and pull from linkedin
-
-const trainingData = [
-  {
-    prompt: "What is fitness?",
-    completion: "Fitness is the state of being physically fit and healthy.",
-  },
-  {
-    prompt: "What is fitness?",
-    completion: "It is the ability to perform physical activity.",
-  },
-  {
-    prompt: "What is fitness?",
-    completion: "Fitness is the ability to perform physical activity.",
-  },
-  {
-    prompt: "What is fitness?",
-    completion: "Fitness is the ability to perform physical activity.",
-  },
-];
-
-const examplePillars = {
-  pillar1: [
-    { title: "title 1", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
-    { title: "title 2", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
-    { title: "title 3", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
-  ],
-  pillar2: [
-    { title: "title 1", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
-    { title: "title 2", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
-    { title: "title 3", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
-  ],
-  pillar3: [
-    { title: "title 1", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
-    { title: "title 2", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
-    { title: "title 3", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
-  ],
-};
-
-const dummyResponse = [
-  {
-    role: "user",
-    content: "freelancing",
-  },
-  {
-    role: "assistant",
-    content:
-      '{\n  "Content Pillars": {\n    "Building a Freelance Business": [\n      {\n        "title": "5 Tips for Building a Strong Freelance Business",\n        "hashtags": ["#freelancing", "#entrepreneurship", "#business"]\n      },\n      {\n        "title": "The Importance of Networking for Freelancers",\n        "hashtags": ["#networking", "#freelancing", "#entrepreneurship"]\n      },\n      {\n        "title": "How to Set Rates as a Freelancer",\n        "hashtags": ["#freelancing", "#pricing", "#entrepreneurship"]\n      }\n    ],\n    "Marketing Yourself as a Freelancer": [\n      {\n        "title": "Creating a Killer Freelance Portfolio",\n        "hashtags": ["#freelancing", "#portfolio", "#marketing"]\n      },\n      {\n        "title": "The Power of Personal Branding for Freelancers",\n        "hashtags": ["#personalbranding", "#freelancing", "#marketing"]\n      },\n      {\n        "title": "Using Social Media to Promote Your Freelance Business",\n        "hashtags": ["#socialmedia", "#marketing", "#freelancing"]\n      }\n    ],\n    "Managing Your Freelance Workload": [\n      {\n        "title": "Time Management Tips for Freelancers",\n        "hashtags": ["#timemanagement", "#freelancing", "#productivity"]\n      },\n      {\n        "title": "Staying Motivated as a Freelancer",\n        "hashtags": ["#motivation", "#freelancing", "#productivity"]\n      },\n      {\n        "title": "Dealing with Burnout as a Freelancer",\n        "hashtags": ["#burnout", "#freelancing", "#selfcare"]\n      }\n    ]\n  }\n}',
-  },
-];
 
 export default function Home() {
-  const [session, setSession] = useState(null);
-
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [pillars, setPillars] = useState([
+  //main object to store all data
+  const [themes, setThemes] = useState([
     {
-      pillar: "pillar 1",
+      theme: "theme 1",
+      loading: false,
     },
     {
-      pillar: "pillar 2",
+      theme: "theme 2",
+      loading: false,
     },
     {
-      pillar: "pillar 3",
+      theme: "theme 3",
+      loading: false,
     },
   ]);
-  const [model, setModel] = useState("gpt-3.5-turbo");
-  const [post, setPost] = useState("");
 
-  const [generatedBios, setGeneratedBios] = useState("");
+  //editable in sidebar
+  const [session, setSession] = useState(null); //user session from linkedin
+  const [sidebarOpen, setSidebarOpen] = useState(false); //show sidebar
+  const [model, setModel] = useState("gpt-4"); //model to use for gpt - speed(gpt-3.5-turbo)/quality(gpt-4)
+  const [profiles, setProfiles] = useState({
+    new: [{ content: "" }],
+  }); //profiles fetched from linkedin - awaiting partner scope permissions 'r_member_social'
+  const [profile, setProfile] = useState("new");
+  const blankProfile = [{ content: "" }];
+  const [posts, setPosts] = useState(blankProfile); //posts fetched from linkedin - awaiting partner scope permissions 'r_member_social'
+  const [post, setPost] = useState(""); //selected generated post to edit in textarea
+  const [tone, setTone] = useState("professional"); //tone to select from
+  const [language, setLanguage] = useState("English"); //language to select from
+  const [headline, setHeadline] = useState("Professional"); //user headline from linkedin
+  const [sector, setSector] = useState("Web development"); //sector to select from - awaiting partner scope permissions 'r_member_social'
+  const [bio, setBio] = useState("I am a digital handyman"); //user bio from linkedin - awaiting partner scope permissions 'r_member_social'
 
-  const [personalPosts, setPersonalPosts] = useState([]);
+  //identity that takes headline from user profile
+  const [promptIdentity, setPromptIdentity] = useState(
+    `You are a ${headline} writing posts for your company profile on the social media platform: LinkedIn`
+  );
+  //set as state var to allow for user rule editing in future
+  const [promptRules, setPromptRules] =
+    useState(`The post MUST follow these rules:
+  - The post should have a short opening sentence not more than 350 characters.
+  - The opening sentence must be followed by a line break.
+  - The post should be no more than 3000 characters.
+  - Separate each sentence with a line break.
+  - The post should be written in the third person.
+  - The post should be written in the present tense.
+  - There should be no more than 3 hashtags, these should be relevant to the post copy.
+  - Hashtags should be at the end of the post`);
+  const [promptTone, setPromptTone] = useState(`Posts should be ${tone}.`);
+  const [promptLanguage, setPromptLanguage] = useState(
+    `The language should be ${language}.`
+  );
+  const [promptHeadline, setPromptHeadline] = useState(
+    `The users LinkedIn headline is: ${headline}.`
+  );
+  const [promptExample, setPromptExample] =
+    useState(`An example of a previous post by the user is:
+  -------
+  ${
+    posts
+      ? posts
+          ?.map((post, postIndex) => `Post ${postIndex}: ${post.content}`)
+          .join("\n")
+      : ""
+  }
+  -------`);
+  const [promptStyle, setPromptStyle] = useState(
+    `The style of the new post should be similar to the example.`
+  );
+  const [promptSubject, setPromptSubject] = useState(
+    `The subject of the post is: ${Object.keys(themes)[0]}.`
+  );
 
-  const tones = [
-    "professional",
-    "casual",
-    "funny",
-    "serious",
-    "friendly",
-    "sarcastic",
-    "informative",
-    "persuasive",
-    "inspirational",
-    "motivational",
-    "educational",
-    "controversial",
-    "conversational",
-    "engaging",
-    "thought-provoking",
-    "emotional",
-  ];
-  const [headline, setHeadline] = useState("");
-  const [tone, setTone] = useState("professional");
-
-  const languages = ["English", "French", "German", "Spanish", "Italian"];
-  const [language, setLanguage] = useState("English");
-
-  const [isWeek, setIsWeek] = useState(true);
-  const [isTrending, setIsTrending] = useState(true);
-
-  const [personality, setPersonality] = useState("linkedIn");
-  const [personalities, setPersonalities] = useState({
-    blank: [{ content: "" }],
-  });
-
-  const blankPersonality = [{ content: "" }];
-
-  const [posts, setPosts] = useState(blankPersonality);
+  const joinedPrompt = `${promptIdentity}
+${promptRules}
+${promptTone}
+${promptLanguage}
+${promptHeadline}
+${promptExample}
+${promptStyle}
+${promptSubject}`;
+  console.log({ joinedPrompt });
 
   const [vulsePrompt, setVulsePrompt] = useState(``);
-
-  useEffect(() => {
-    console.log("here");
-    console.log({ headline, tone, language });
-    // setVulsePrompt(
-    //   "You are a {headline} writing posts for your personal profile on the social media platform: LinkedIn"
-    // );
-
-    // The users LinkedIn profile description is: {description}. <-- stripped out because we can't get bio
-    // The user works in the {sector} industry. <-- stripped out because we can't get job history
-    setVulsePrompt(`You are a ${headline} writing posts for your personal profile on the social media platform: LinkedIn
-    The post MUST follow these rules:
-    - The post should have a short opening sentence not more than 350 characters.
-    - The opening sentence must be followed by a line break.
-    - The post should be no more than 3000 characters.
-    - Separate each sentence with a line break.
-    - The post should be written in the first person.
-    - The post should be written in the present tense.
-    - There should be no more than 3 hashtags, these should be relevant to the post copy.
-    - Hashtags should be at the end of the post
-    Posts should be ${tone}.
-    The language should be ${language}.
-
-    The users LinkedIn headline is: ${headline}.
-
-    An example of a previous post by the user is:
-    -------
-    ${posts ? posts?.map((post) => post.content).join("\n") : ""}
-    -------
-
-    The style of the new post should be similar to the example.
-    The subject of the post is: {subject}.`);
-  }, [tone, headline, language, posts]);
-
-  useEffect(() => {
-    const cookies = getCookies();
-    // console.log({ cookies });
-
-    const getPosts = async () => {
-      const postUrl = `/api/getOrgPosts?access_token=${cookies.access_token}`;
-      const response = await fetch(postUrl, {
-        method: "GET",
-      });
-      const posts = await response.json();
-      const personalPersonality = posts;
-
-      //add personalPersonality to personalites with setPersonalities
-      const newPersonalities = {
-        ...personalities,
-        personal: personalPersonality,
-      };
-      console.log({ newPersonalities });
-
-      setPersonalities(newPersonalities);
-      setPersonalPosts(posts);
-      setPersonality("personal");
-      setPosts(posts);
-    };
-
-    if (cookies.access_token) {
-      getPosts();
-    }
-
-    if (cookies.userData) {
-      setSession(JSON.parse(decodeURIComponent(cookies.userData)));
-      setHeadline(
-        JSON.parse(decodeURIComponent(cookies.userData)).localizedHeadline
-      );
-    }
-  }, []);
-
-  const handleSubmit = async (e) => {
-    console.log(`submitting`);
-    setLoading(true);
-    e.preventDefault();
-
-    const res = await fetch("/api/gpt", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messages: [
-          {
-            role: "user",
-            content: message,
-          },
-        ],
-        model,
-      }),
-    });
-    const data = res.body;
-
-    setMessage("");
-
-    const reader = data.getReader();
-    const decoder = new TextDecoder();
-    let done = false;
-    let generatedBios = "";
-
-    while (!done) {
-      const { value, done: doneReading } = await reader.read();
-      done = doneReading;
-      const chunkValue = decoder.decode(value);
-      generatedBios += chunkValue;
-    }
-
-    console.log({ generatedBios });
-
-    // Wrap the string in curly braces
-    const wrappedGeneratedBios = "{" + generatedBios + "}";
-
-    // Parse the wrapped string as JSON
-    let json = JSON.parse(wrappedGeneratedBios.slice(0, -1));
-    console.log({ json });
-
-    if (Object.keys(json).length === 1) {
-      json = json[Object.keys(json)[0]];
-    }
-
-    if (json["Content Pillars"]) {
-      delete json["Content Pillars"];
-    }
-
-    console.log({ json });
-
-    setPillars(json);
-    console.log({ pillars });
-    setLoading(false);
-  };
-
-  // tones
 
   const handleChangeTone = (e) => {
     setTone(e.target.value);
@@ -267,15 +107,77 @@ export default function Home() {
     setVulsePrompt(e.target.value);
   };
 
-  // tones
+  useEffect(() => {
+    console.log("here");
+    console.log({ headline, tone, language });
+    // The users LinkedIn profile description is: {description}. <-- stripped out because we can't get bio
+    // The user works in the {sector} industry. <-- stripped out because we can't get job history
+    setVulsePrompt(`You are a ${headline} writing posts for your personal profile on the social media platform: LinkedIn
+    The post MUST follow these rules:
+    - The post should have a short opening sentence not more than 350 characters.
+    - The opening sentence must be followed by a line break.
+    - The post should be no more than 3000 characters.
+    - Separate each sentence with a line break.
+    - The post should be written in the third person.
+    - The post should be written in the present tense.
+    - There should be no more than 3 hashtags, these should be relevant to the post copy.
+    - Hashtags should be at the end of the post
+    Posts should be ${tone}.
+    The language should be ${language}.
 
-  console.log({ session });
+    The users LinkedIn headline is: ${headline}.
 
+    An example of a previous post by the user is:
+    -------
+    ${posts ? posts?.map((post) => post.content).join("\n") : ""}
+    -------
+
+    The style of the new post should be similar to the example.
+    The subject of the post is: ${Object.keys(themes)[0]}.`);
+  }, [tone, headline, language, posts]); //if there are any changes, update the vulse prompt
+
+  useEffect(() => {
+    const cookies = getCookies();
+
+    const getPosts = async () => {
+      const postUrl = `/api/getOrgPosts?access_token=${cookies.access_token}`;
+      const response = await fetch(postUrl, {
+        method: "GET",
+      });
+      const posts = await response.json();
+      const personalProfile = posts;
+
+      const newProfiles = {
+        ...profiles,
+        personal: personalProfile,
+      };
+      console.log({ newProfiles });
+
+      setProfiles(newProfiles);
+      setProfile("personal");
+      setPosts(posts);
+    };
+
+    if (cookies.access_token) {
+      getPosts();
+    }
+
+    if (cookies.userData) {
+      setSession(JSON.parse(decodeURIComponent(cookies.userData)));
+      setHeadline(
+        JSON.parse(decodeURIComponent(cookies.userData)).localizedHeadline
+      );
+    }
+  }, []);
+
+  //function that generates the main 3 ideas for a topic
   const generatePostIdeas = async (topic, index) => {
-    //setPillars, add loading to topic
-    console.log({ topic });
+    const loadingThemes = [...themes]; //create copy of themes
+    loadingThemes[index].loading = true; //set loading to true for theme to render loading spinner
+    setThemes(loadingThemes); //update state
 
     const userMessage = {
+      //structure of a message to be consumed by GPT
       role: "user",
       content: topic,
     };
@@ -290,13 +192,17 @@ export default function Home() {
         model,
       }),
     });
-    const data = res.body;
+
+    const data = res.body; //res.body as a readable stream
     const reader = data.getReader();
     const decoder = new TextDecoder();
     let done = false;
+
+    //TODO look into fixing this v
     let ideas = "[";
 
     while (!done) {
+      //wait for response to finish streaming
       const { value, done: doneReading } = await reader.read();
       done = doneReading;
       const chunkValue = decoder.decode(value);
@@ -304,25 +210,29 @@ export default function Home() {
     }
 
     console.log({ ideas });
+
     const sanitizedData = ideas
       .replace(/\\\"/g, '"')
       .replace(/title:/g, '"title":')
       .replace(/hashtags:/g, '"hashtags":');
+    console.log({ sanitizedData });
+
     const jsonArray = eval(sanitizedData.trim());
     console.log(jsonArray);
 
-    //add ideas to pillar
-    const newPillars = Object.assign([], pillars);
+    //add ideas to theme
+    const newThemes = Object.assign([], themes);
 
-    pillars.forEach((pillar, pi) => {
+    themes.forEach((theme, pi) => {
       if (pi === index) {
-        pillar.ideas = jsonArray;
+        theme.ideas = jsonArray;
       }
     });
 
-    setPillars(newPillars);
+    newThemes[index].loading = false;
+    setThemes(newThemes);
 
-    console.log({ pillars });
+    console.log({ themes });
   };
 
   const generatePost = async (topic, postPillar) => {
@@ -338,10 +248,8 @@ export default function Home() {
     - Hashtags should be at the end of the post
     Posts should be ${tone}.
     The language should be ${language}.
-    The user works in the {sector} industry.
-    The users LinkedIn profile description is: {description}.
     
-    The users LinkedIn headline is: {headline}.
+    The users LinkedIn headline is: ${headline}.
     
     An example of a previous post by the user is:
     ------- 
@@ -349,35 +257,27 @@ export default function Home() {
     -------
   
     The style of the new post should be similar to the example.
-    The subject of the post is: {subject}.`;
+    The subject of the post is: ${topic}.`;
 
     console.log({ newVulsePrompt });
-    // return;
 
-    const newPillars = Object.assign([], pillars);
+    const newThemes = Object.assign([], themes);
 
-    pillars.forEach((pillar, pi) => {
-      console.log(pillar);
-      console.log(postPillar);
-      if (pillar.pillar === postPillar) {
-        console.log("found pillar");
-        pillar.ideas.forEach((idea, ideaIndex) => {
+    themes.forEach((theme, pi) => {
+      // console.log(theme);
+      // console.log(postPillar);
+      if (theme.theme === postPillar) {
+        console.log("found theme");
+        theme.ideas.forEach((idea, ideaIndex) => {
           if (idea.title === topic) {
             console.log("found idea");
             idea.loading = true;
           }
         });
-
-        //   newPillars[pillar.pillar] = pillars[pillar].ideas.map((post) => {
-        //     if (post.title === topic) {
-        //       post.loading = true;
-        //     }
-        //     return post;
-        //   });
       }
     });
 
-    setPillars(newPillars);
+    setThemes(newThemes);
 
     let learningPrompt = `Analyse the following LinkedIn posts to adopt the writing style and use this style to generate a compelling LinkedIn post. Ensure that you provide diverse and engaging content ideas while considering the user's preferences. Every post must end with 3 relevant popular hastags and follow the writing style of the following posts:
     ${posts.map((post, postIndex) => {
@@ -393,7 +293,7 @@ export default function Home() {
 
     const fullMessage = {
       role: "user",
-      content: `${learningPrompt} ${topic}`,
+      content: `${topic}`,
     };
 
     const res = await fetch("/api/generatePost", {
@@ -403,6 +303,7 @@ export default function Home() {
       },
       body: JSON.stringify({
         messages: [
+          learningMessage,
           {
             role: "user",
             content: fullMessage.content,
@@ -412,16 +313,12 @@ export default function Home() {
       }),
     });
     const data = await res.body;
-    // const data = await res.json();
-
     let selectedPost;
 
-    pillars.forEach((pillar) => {
-      if (pillar.pillar === postPillar) {
-        console.log("290");
-        console.log(pillar, postPillar);
-        console.log("290");
-        pillar.ideas.forEach((post) => {
+    themes.forEach((theme) => {
+      if (theme.theme === postPillar) {
+        console.log(theme, postPillar);
+        theme.ideas.forEach((post) => {
           if (post.title === topic) {
             selectedPost = post;
           }
@@ -443,25 +340,13 @@ export default function Home() {
       selectedPost.post = generatedPost;
     }
 
-    setPillars(pillars);
-    setLoading(false);
+    setThemes(themes);
   };
 
-  // const handleSetModel = (e) => {
-  //   setModel(e.target.value);
-  // };
-
-  const handleToggle = () => {
-    setIsWeek(!isWeek);
-  };
-
-  const handleTrending = () => {
-    setIsTrending(!isTrending);
-  };
-
-  const handleChangePersonality = (e) => {
-    setPersonality(e.target.value);
-    setPosts(personalities[e.target.value]);
+  const handleChangeProfile = (e) => {
+    2;
+    setProfile(e.target.value);
+    setPosts(profiles[e.target.value]);
   };
 
   const handleNewPost = (e) => {
@@ -470,17 +355,23 @@ export default function Home() {
   };
 
   const handlePostChange = (e, index) => {
-    // console.log({ e, index });
-    // console.log(e.target.value);
     const newPosts = [...posts];
     newPosts[index].content = e.target.value;
     setPosts(newPosts);
   };
 
   const handleDeletePost = (index) => {
-    const newPosts = [...posts];
-    newPosts.splice(index, 1);
-    setPosts(newPosts);
+    if (posts[index].content.length === 0) {
+      const newPosts = [...posts];
+      newPosts.splice(index, 1);
+      setPosts(newPosts);
+    } else {
+      if (confirm("Are you sure you want to delete this post?")) {
+        const newPosts = [...posts];
+        newPosts.splice(index, 1);
+        setPosts(newPosts);
+      }
+    }
   };
 
   async function signOut() {
@@ -489,10 +380,6 @@ export default function Home() {
     deleteCookie("access_token");
     deleteCookie("userData");
   }
-
-  const image1Ref = useRef(null);
-  const image2Ref = useRef(null);
-  const image3Ref = useRef(null);
 
   function handleSetModel(e) {
     if (e.target.checked) {
@@ -516,7 +403,8 @@ export default function Home() {
         data-drawer-toggle="default-sidebar"
         aria-controls="default-sidebar"
         type="button"
-        className="inline-flex items-center p-2 mt-2 ml-3 text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+        className="z-20 inline-flex items-center p-2 mt-2 ml-3 text-sm text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
       >
         <span className="sr-only">Open sidebar</span>
         <svg
@@ -534,7 +422,7 @@ export default function Home() {
         </svg>
       </button>
       <div className="grid grid-cols-12 gap-4 h-full min-h-screen">
-        <div className="p-5 sm:ml64 col-span-10">
+        <div className="p-5 sm:ml64 col-span-12 lg:col-span-10">
           <div className="">
             <div className="grid grid-cols-2 2xl:grid-cols-3 gap-4 mb-">
               <div className="flex items-center justify-between space-x-5 rounded">
@@ -542,94 +430,15 @@ export default function Home() {
                   Themes
                 </h1>
               </div>
-              <div className="flex items-center justify-end space-x-2 rounded">
-                {/* <LinkedInAuth /> */}
-                {/* <PersonalConnect /> */}
-              </div>
-              <div className="flex items-center justify-end space-x-2 h-24 rounded">
-                {session ? (
-                  <button
-                    className="flex items-center space-x-2 text font-semibold text-gray-400 dark:text-vulsePurple"
-                    onClick={() => signOut()}
-                  >
-                    <span>
-                      {session.localizedFirstName} {session.localizedLastName}
-                    </span>
-                    <div
-                      className={`p-2 w-10 h-10 text-white bg-gray-200 border-2 rounded-full group ${
-                        session
-                          ? "bg-violet-100 border-violet-500"
-                          : "bg-gray-200 border-gray-200"
-                      }`}
-                    >
-                      <svg
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={1.5}
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true"
-                        className="w-5 h-5 transition duration-75 text-vulsePurple group-hover:text-gray-500"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                        />
-                      </svg>
-                    </div>
-                  </button>
-                ) : (
-                  <a
-                    className="flex items-center space-x-2 text font-semibold text-gray-400 dark:text-slate-500"
-                    href={LINKEDIN_URL}
-                  >
-                    Sign in
-                    <svg
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                      aria-hidden="true"
-                      className="w-5 h-5 transition duration-75 text-gray-400 group-hover:text-gray-500"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                      />
-                    </svg>
-                  </a>
-                )}
-                {/* <a
-                  className="flex items-center space-x-2 text font-semibold text-gray-400 dark:text-slate-500 hover:text-gray-500 cursor-pointer"
-                  href={PESRONAL_LINKEDIN_URL}
-                >
-                  Connect Personal Account
-                  <svg
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                    className="w-5 h-5 transition duration-75 text-gray-400 group-hover:text-gray-500"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                    />
-                  </svg>
-                </a> */}
-              </div>
             </div>
-            <div className="grid grid-cols-3 gap-4 mb-4 border-b py-3">
-              {pillars.length > 0 &&
-                pillars?.map((pillar, index) => (
+            <span className="text-gray-600">
+              Please enter themes below to generate content
+            </span>
+            <div className="grid grid-cold-1 lg:grid-cols-3 gap-4 mb-4 border-b py-3">
+              {themes.length > 0 &&
+                themes?.map((theme, index) => (
                   <div
-                    className={`flex flex-col items-start justify-start  ${
+                    className={`flex flex-col items-start justify-start ${
                       index != 2 && "border-r"
                     } pr-3`}
                     key={index}
@@ -645,12 +454,12 @@ export default function Home() {
                         <input
                           type="text"
                           className="p-2.5 w-full z-20 text-sm rounded-lg border border-gray-300"
-                          placeholder={`Topic ${index + 1}`}
+                          placeholder={`Theme ${index + 1}`}
                           onChange={(e) => {
-                            setPillars(
-                              pillars.map((item, i) =>
+                            setThemes(
+                              themes.map((item, i) =>
                                 i === index
-                                  ? { ...item, pillar: e.target.value }
+                                  ? { ...item, theme: e.target.value }
                                   : item
                               )
                             );
@@ -658,12 +467,12 @@ export default function Home() {
                         />
                         <button
                           type="button"
-                          className="absolute top-0 right-0 p-2.5 text-sm font-medium text-white bg-vulsePurple rounded-r-lg border border-vulsePurple hover:bg-violet-800 focus:ring-4 focus:outline-none focus:ring-violet-300 dark:bg-vulsePurple dark:hover:bg-vulsePurple dark:focus:ring-vulsePurple"
-                          onClick={() => {
-                            generatePostIdeas(pillar.pillar, index);
+                          className="absolute top-0 right-0 p-2.5 text-sm font-medium text-white bg-vulsePurple rounded-r-lg border border-vulsePurple hover:bg-violet-800 focus:ring- focus:outline-none focus:ring-violet-300 dark:bg-vulsePurple dark:hover:bg-vulsePurple dark:focus:ring-vulsePurple"
+                          onClick={async () => {
+                            await generatePostIdeas(theme.theme, index);
                           }}
                         >
-                          {pillar.loading ? (
+                          {theme.loading ? (
                             <svg
                               className="animate-spin h-5 w-5 text-white"
                               viewBox="0 0 24 24"
@@ -705,7 +514,7 @@ export default function Home() {
 
                     {/* goes here */}
                     <div className="flex flex-col items-start justify-center rounded space-y-4 py-2 px-1 text-sm">
-                      {pillar.ideas?.map((topic, index) => (
+                      {theme.ideas?.map((topic, index) => (
                         <div className="flex flex-col items-center justify-between space-x-2 py-2 px-1 text-sm w-full border-b2">
                           <div
                             className="flex items-center justify-between rounded space-x-2 py-2 px-1 text-sm w-full"
@@ -715,11 +524,11 @@ export default function Home() {
                               {topic.title}{" "}
                             </h3>
                             <button
-                              className={`ml-1 p-1 text-white bg-violet-300 rounded-full ${
+                              className={`ml-1 p-1 text-white bg-vulsePurple rounded-full ${
                                 topic.loading && "animate-spin"
                               }`}
                               onClick={() =>
-                                generatePost(topic.title, pillar.pillar)
+                                generatePost(topic.title, theme.theme)
                               }
                             >
                               {topic.post || topic.loading ? (
@@ -744,9 +553,9 @@ export default function Home() {
                           {topic.post && (
                             <div className="text-2l text-gray-400 dark:text-gray-500 fomt-semibold w-full">
                               <details className="flex flex-col items-start justify-start space-y-2 w-full">
-                                <summary className="flex items-center justify-center space-x-2 py-2 px-1 text-sm border- cursor-pointer">
-                                  {topic.post.length > 50
-                                    ? topic.post.slice(0, 50) + "..."
+                                <summary className="flex items-center justify-start font-semibold space-x-2 py-2 px-1 text-sm border- cursor-pointer">
+                                  {topic.post.length > 60
+                                    ? topic.post.slice(0, 60) + "..."
                                     : topic.post}
                                   <svg
                                     fill="none"
@@ -769,7 +578,7 @@ export default function Home() {
                                     {topic.post}
                                   </div>
                                   <button
-                                    className="flex space-x-1 px-2 py-1 text-white bg-violet-300 rounded-full self-end"
+                                    className="flex space-x-1 px-2 py-1 text-white bg-vulsePurple rounded-full self-end"
                                     onClick={() => setPost(topic)}
                                   >
                                     <span>Edit </span>
@@ -797,86 +606,109 @@ export default function Home() {
                   </div>
                 ))}
             </div>
+            {/* if user has selected a post to edit */}
             {post && (
               <div className="grid grid-cols-6 gap-4 mb-4 col-span-3">
-                <div className="flex flex-col items-start justify-center col-span-3 space-y-3">
+                <div className="flex flex-col items-start justify-center col-span-6 space-y-3">
                   <textarea
                     className="w-full p-2 text-xs border rounded shadow-md min-h-[200px] max-h-[500px] focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent"
                     value={post.post}
                     onChange={(e) => setPost(e.target.value)}
                   />
-                  {/* <div className="flex flex-row items-center justify-between">
-                    {[0, 1, 2].map((i, ni) => (
-                      <div
-                        className="flex flex-col items-center justify-center p-2 my-3 mr-3 text-xl shadow-md w-[100px] h-[100px] bg-g0 border-2 border-gray-300 border-dashed rounded whitespace-pre-wrap"
-                        key={ni}
-                      >
-                        <input
-                          type="file"
-                          className="hidden"
-                          ref={
-                            i === 0
-                              ? image1Ref
-                              : i === 1
-                              ? image2Ref
-                              : i === 2
-                              ? image3Ref
-                              : null
-                          }
-                        />
-                        <div
-                          className="bg-gray-100 w-full h-full flex justify-center items-center rounded cursor-pointer"
-                          onClick={() => {
-                            if (i === 0) image1Ref.current.click();
-                            if (i === 1) image2Ref.current.click();
-                            if (i === 2) image3Ref.current.click();
-                          }}
-                        >
-                          <svg
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                            aria-hidden="true"
-                            className="w-12 h-12 text-gray-300"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M12 4.5v15m7.5-7.5h-15"
-                            ></path>
-                          </svg>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <input
-                    className="w-full p-2 text-xs border rounded shadow-md"
-                    placeholder="First post comment"
-                  />
-                  <div className="flex flex-row items-center justify-between w-full">
-                    <button className="py-1 px-5 rounded-full bg-gray-200 text-gray-600">
-                      Save as draft
-                    </button>
-                    <button className="py-1 px-5 rounded-full bg-violet-600 text-gray-50">
-                      Post
-                    </button>
-                    <button className="py-1 px-5 rounded-full border-2 border-violet-600 text-gray-600">
-                      Schedule
-                    </button>
-                  </div> */}
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/*  */}
-        <div className="flex flex-col items-center justify-start w-full h-full p-2 space-y-4 select-none bg-gray-100 pt-7 col-span-2">
-          <div className="flex flex-col items-start justify-center space-y-3 w-full"></div>
-
-          {/*  */}
+        <div
+          className={` top-0 left-0 lg:flex flex-col items-start justify-start w-full h-full p-2 space-y-4 select-none bg-gray-100 pt-7 col-span-12 transition-all duration-300 ease-in-out ${
+            sidebarOpen ? "absolute" : "hidden lg:flex lg:col-span-2"
+          }`}
+        >
+          <div
+            className={`flex items-center justify-end w-full h-10 space-x-2 rounded ${
+              !sidebarOpen && "hidden"
+            }`}
+          >
+            <span
+              className="flex items-center justify-center w-6 h-6 rounded-full cursor-pointer hover:bg-gray-300"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+            >
+              <svg
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+                className="w-5 h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </span>
+          </div>
+          {session ? (
+            <button
+              className="flex w-full justify-start items-center space-x-2 text font-semibold text-gray-400 dark:text-vulsePurple"
+              onClick={() => signOut()}
+            >
+              <span>
+                {session.localizedFirstName} {session.localizedLastName}
+              </span>
+              <div
+                className={`p-2 w-10 h-10 text-white bg-gray-200 border-2 rounded-full group ${
+                  session
+                    ? "bg-violet-100 border-violet-500"
+                    : "bg-gray-200 border-gray-200"
+                }`}
+              >
+                <svg
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                  className="w-5 h-5 transition duration-75 text-vulsePurple group-hover:text-gray-500"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                  />
+                </svg>
+              </div>
+            </button>
+          ) : (
+            <a
+              className="flex items-center space-x-1 text font-semibold text-gray-400 dark:text-slate-500 border-2 bg-slate-100 rounded-full px-2 py-1 hover:bg-slate-200 hover:text-slate-300"
+              href={LINKEDIN_URL} //dynamically load different env var whether pesronal or company LinkedIn
+            >
+              <span className="text-gray-400 dark:text-slate-500">
+                Connect LinkedIn
+              </span>
+              <svg
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+                className="w-5 h-5 transition duration-75 text-gray-400 group-hover:text-gray-500"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                />
+              </svg>
+            </a>
+          )}
           <div className="flex flex-col items-start justify-center space-y-3 w-full">
             <h3 className="text-sm text-gray-400 dark:text-gray-500 font-semibold">
               Priority
@@ -890,7 +722,7 @@ export default function Home() {
                     : "text-gray-400"
                 }`}
               >
-                Quality
+                Speed
               </span>
               <label className="relative inline-flex items-center cursor-pointer mx-2">
                 <input
@@ -898,6 +730,7 @@ export default function Home() {
                   value=""
                   className="sr-only peer"
                   onChange={handleSetModel}
+                  checked={model === "gpt-4"}
                 />
                 <div className="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:bor2er-gray-600 peer-checked:bg-vulsePurple"></div>
               </label>
@@ -906,36 +739,31 @@ export default function Home() {
                   model === "gpt-4" ? "text-vulsePurple" : "text-gray-400"
                 }`}
               >
-                Speed
+                Quality
               </span>
             </div>
           </div>
-
           <div className="flex flex-col items-center space-y-2 justify-center w-full">
             <div className="flex flex-col items-start justify-center space-y-3 w-full mt-5">
               <h3 className="text-sm text-gray-400 dark:text-gray-500 font-semibold">
-                Personality
+                Profiles
               </h3>
               <select
                 className="w-full p-3 mt- text-xs border rounded-lg"
-                onChange={handleChangePersonality}
-                value={personality}
+                onChange={handleChangeProfile}
+                value={profile}
               >
-                {Object.keys(personalities).map((personalityOption, index) => (
-                  <option key={index} value={personalityOption}>
-                    {personalityOption}
+                {Object.keys(profiles).map((profileOption, index) => (
+                  <option key={index} value={profileOption}>
+                    {profileOption}
                   </option>
                 ))}
               </select>
             </div>
-            {/* <button className="px-3 py-1 text-white bg-violet-500 rounded-full flex items-center">
-              Connect LinkedIn
-            </button> */}
           </div>
-
-          <div className="flex items-center justify-center space-x-2 self-start">
+          <div className="flex items-center justify-start space-x-2 self-start">
             <button
-              className="px-3 py-1 text-white bg-violet-500 rounded-full flex items-center"
+              className="px-3 py-1 text-white bg-violet-500 rounded flex items-center"
               onClick={handleNewPost}
             >
               <svg
@@ -956,50 +784,48 @@ export default function Home() {
               <span className="text-xs">New Post</span>
             </button>
           </div>
-
           {posts?.length > 0 && (
             <div className="flex flex-col items-start justify-center space-y-3 w-full">
-              <div className="flex flex-col items-center p-1 justify-start space-y-5 overflow-y-scroll w-full shadow bg-gray-50 border-gray-300 rounded-lg">
+              <div className="flex flex-col items-center p-1 justify-start space-y-5 w-full shadow bg-gray-50 border-gray-300 rounded-lg">
                 {posts.map((post, index) => (
                   <div
-                    className="flex flex-col items-start justify-start space-y-3 w-full"
+                    className="flex flex-col items-start justify-start space-y- w-full"
                     key={index}
                   >
+                    <div className="self-end relative">
+                      <button
+                        className="z-20 absolute -top-2 -right-2 p-1 bg-red-300 rounded-full shadow text-white hover:bg-red-500"
+                        onClick={() => handleDeletePost(index)}
+                      >
+                        <svg
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={1.5}
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                          aria-hidden="true"
+                          className="w-3 h-3"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                     <textarea
                       key={index}
                       className="w-full p-1 mt- text-xs border rounded-lg h-[75px] focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent focus:h-[200px] resize-none transform transition-all duration-600 ease-in-out"
                       value={post.content}
                       onChange={(e) => handlePostChange(e, index)}
                     />
-                    <button
-                      className="px-3 py-1 text-white bg-red-500 rounded-full flex items-center self-end"
-                      onClick={() => handleDeletePost(index)}
-                    >
-                      <svg
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={1.5}
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true"
-                        className="w-5 h-5"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                      <span className="text-xs ">Delete Post</span>
-                    </button>
                   </div>
                 ))}
               </div>
             </div>
           )}
-
-          {/*  */}
-          <div className="flex flex-col items-start justify-center space-y-3 w-full">
+          <div className="flex flex-col items-start justify-center space-y-3 w-full pb-10">
             <h3 className="text-sm text-gray-400 dark:text-gray-500 font-semibold mt-5">
               Modify Prompt
             </h3>
@@ -1035,7 +861,7 @@ export default function Home() {
               </select>
 
               <label className="text-xs text-gray-400 dark:text-gray-500 font-semibold">
-                Headline - {headline}
+                Headline
               </label>
               <input
                 className="w-full p-3 mt- text-xs border rounded-lg"
@@ -1047,19 +873,13 @@ export default function Home() {
                 Prompt
               </label>
               <textarea
-                className="w-full p-3 mt- text-xs border rounded-lg h-[500px] focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent focus:h-[300px] resize-none transform transition-all duration-600 ease-in-out"
+                className="w-full p-3 mt- text-xs border rounded-lg h-[500px] focus:outline-none focus:ring-2 focus:ring-vulsePurple focus:border-transparent focus:h-[300px] resize-none transform transition-all duration-600 ease-in-out"
                 value={vulsePrompt}
                 onChange={handleChangePrompt}
               />
-
-              {/* <button className="px-3 py-1 text-white bg-violet-500 rounded-full flex items-center">
-                Save
-              </button> */}
             </div>
           </div>
-          {/*  */}
         </div>
-        {/*  */}
       </div>
     </>
   );
