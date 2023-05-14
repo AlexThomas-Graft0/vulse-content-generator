@@ -76,7 +76,7 @@ export default function Home() {
     `The style of the new post should be similar to the example.`
   );
   const [promptSubject, setPromptSubject] = useState(
-    `The subject of the post is: ${Object.keys(themes)[0]}.`
+    `The subject of the post is: ${themes[0].theme}.`
   );
 
   const joinedPrompt = `${promptIdentity}
@@ -133,8 +133,8 @@ ${promptSubject}`;
     -------
 
     The style of the new post should be similar to the example.
-    The subject of the post is: ${Object.keys(themes)[0]}.`);
-  }, [tone, headline, language, posts]); //if there are any changes, update the vulse prompt
+    The subject of the post is: ${themes[0].theme}.`); //set to curret post idea
+  }, [tone, headline, language, posts, themes]); //if there are any changes, update the vulse prompt
 
   useEffect(() => {
     const cookies = getCookies();
@@ -686,7 +686,8 @@ ${promptSubject}`;
             </button>
           ) : (
             <button className="flex items-center text font-semibold text-gray-400 dark:text-slate-500 border-2 bg-slate-100 rounded-full px-3 py-1 hover:bg-slate-200 hover:text-slate-300">
-              <a className="flex items-center space-x-1"
+              <a
+                className="flex items-center space-x-1"
                 href={LINKEDIN_URL} //dynamically load different env var whether pesronal or company LinkedIn
               >
                 <div className="text-gray-400 dark:text-slate-500 w-full">
