@@ -1,7 +1,3 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import { getCookies, getCookie, setCookie, deleteCookie } from "cookies-next";
-
-// const postUrl = `https://api.linkedin.com/rest/posts?author=urn%3Ali%3Aorganization%3A${vulseOrgID}&q=author&count=3`;
 const getPosts = async (req, res, access_token) => {
   if (!access_token || access_token === "undefined") {
     return [];
@@ -18,13 +14,12 @@ const getPosts = async (req, res, access_token) => {
   });
   const orgInfo = await orgInfoResponse.json();
 
-  console.log({ orgInfo });
-  const orgURN = orgInfo.elements[0].organizationalTarget;
+  const orgURN = orgInfo?.elements[0]?.organizationalTarget;
+  const orgID = orgURN.split(":")[3];
   const vulseOrgID = "42473684";
 
-  //TODO change this back to orgURN instead of vulse
-  // const postUrl = `https://api.linkedin.com/rest/posts?author=${orgURN}&q=author&count=3`;
-  const postUrl = `https://api.linkedin.com/rest/posts?author=urn%3Ali%3Aorganization%3A${vulseOrgID}&q=author&count=6`;
+  //TODO change this back to orgURN instead of vulseOrgID
+  const postUrl = `https://api.linkedin.com/rest/posts?author=urn%3Ali%3Aorganization%3A${orgID}&q=author&count=10`;
   const response = await fetch(postUrl, {
     method: "GET",
     headers: {
@@ -64,7 +59,6 @@ const getPosts = async (req, res, access_token) => {
 
   try {
     const posts = await response.json();
-
     const newPosts = posts.elements
       .map((post) => {
         if (post.commentary.length > 0) {

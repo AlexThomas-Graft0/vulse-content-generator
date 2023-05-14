@@ -79,15 +79,15 @@ export default function Home() {
     `The subject of the post is: ${themes[0].theme}.`
   );
 
-  const joinedPrompt = `${promptIdentity}
-${promptRules}
-${promptTone}
-${promptLanguage}
-${promptHeadline}
-${promptExample}
-${promptStyle}
-${promptSubject}`;
-  console.log({ joinedPrompt });
+  //   const joinedPrompt = `${promptIdentity}
+  // ${promptRules}
+  // ${promptTone}
+  // ${promptLanguage}
+  // ${promptHeadline}
+  // ${promptExample}
+  // ${promptStyle}
+  // ${promptSubject}`;
+  //   // console.log({ joinedPrompt });
 
   const [vulsePrompt, setVulsePrompt] = useState(``);
 
@@ -236,31 +236,6 @@ ${promptSubject}`;
   };
 
   const generatePost = async (topic, postPillar) => {
-    const newVulsePrompt = `You are a ${headline} writing posts for your personal profile on the social media platform: LinkedIn
-    The post MUST follow these rules:
-    - The post should have a short opening sentence not more than 350 characters.
-    - The opening sentence must be followed by a line break.
-    - The post should be no more than 3000 characters.
-    - Separate each sentence with a line break.
-    - The post should be written in the first person.
-    - The post should be written in the present tense.
-    - There should be no more than 3 hashtags, these should be relevant to the post copy.
-    - Hashtags should be at the end of the post
-    Posts should be ${tone}.
-    The language should be ${language}.
-    
-    The users LinkedIn headline is: ${headline}.
-    
-    An example of a previous post by the user is:
-    ------- 
-    ${posts ? posts?.map((post) => post.content).join("\n") : ""}
-    -------
-  
-    The style of the new post should be similar to the example.
-    The subject of the post is: ${topic}.`;
-
-    console.log({ newVulsePrompt });
-
     const newThemes = Object.assign([], themes);
 
     themes.forEach((theme, pi) => {
@@ -279,6 +254,7 @@ ${promptSubject}`;
 
     setThemes(newThemes);
 
+    //old prompt
     let learningPrompt = `Analyse the following LinkedIn posts to adopt the writing style and use this style to generate a compelling LinkedIn post. Ensure that you provide diverse and engaging content ideas while considering the user's preferences. Every post must end with 3 relevant popular hastags and follow the writing style of the following posts:
     ${posts.map((post, postIndex) => {
       return `Post ${postIndex + 1}: ${post.content}`;
@@ -288,7 +264,7 @@ ${promptSubject}`;
 
     const learningMessage = {
       role: "system",
-      content: learningPrompt,
+      content: vulsePrompt,
     };
 
     const fullMessage = {
@@ -310,6 +286,7 @@ ${promptSubject}`;
           },
         ],
         model,
+        vulsePrompt,
       }),
     });
     const data = await res.body;
@@ -399,9 +376,6 @@ ${promptSubject}`;
       </Head>
 
       <button
-        data-drawer-target="default-sidebar"
-        data-drawer-toggle="default-sidebar"
-        aria-controls="default-sidebar"
         type="button"
         className="z-20 inline-flex items-center p-2 mt-2 ml-3 text-sm text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
         onClick={() => setSidebarOpen(!sidebarOpen)}
