@@ -685,29 +685,30 @@ ${promptSubject}`;
               </div>
             </button>
           ) : (
-            <a
-              className="flex items-center space-x-1 text font-semibold text-gray-400 dark:text-slate-500 border-2 bg-slate-100 rounded-full px-2 py-1 hover:bg-slate-200 hover:text-slate-300"
-              href={LINKEDIN_URL} //dynamically load different env var whether pesronal or company LinkedIn
-            >
-              <span className="text-gray-400 dark:text-slate-500">
-                Connect LinkedIn
-              </span>
-              <svg
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-                className="w-5 h-5 transition duration-75 text-gray-400 group-hover:text-gray-500"
+            <button className="flex items-center text font-semibold text-gray-400 dark:text-slate-500 border-2 bg-slate-100 rounded-full px-3 py-1 hover:bg-slate-200 hover:text-slate-300">
+              <a className="flex items-center space-x-1"
+                href={LINKEDIN_URL} //dynamically load different env var whether pesronal or company LinkedIn
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                />
-              </svg>
-            </a>
+                <div className="text-gray-400 dark:text-slate-500 w-full">
+                  Connect LinkedIn
+                </div>
+                <svg
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                  className="w-5 h-5 transition duration-75 text-gray-400 group-hover:text-gray-500"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                  />
+                </svg>
+              </a>
+            </button>
           )}
           <div className="flex flex-col items-start justify-center space-y-3 w-full">
             <h3 className="text-sm text-gray-400 dark:text-gray-500 font-semibold">
