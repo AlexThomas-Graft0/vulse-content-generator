@@ -357,34 +357,30 @@ export default function Home() {
       <MenuButton />
       <div className="grid grid-cols-12 gap-4 h-full min-h-screen">
         <div className="p-5 sm:ml64 col-span-12 lg:col-span-10">
-          <div className="">
-            <div className="grid grid-cols-2 2xl:grid-cols-3 gap-4 mb-">
-              <div className="flex items-center justify-between space-x-5 rounded">
-                <h1 className="text-3xl font-bold text-gray-400 dark:text-slate-800">
-                  Themes
-                </h1>
-              </div>
-            </div>
-            <span className="text-gray-600">
-              Please enter themes below to generate content
-            </span>
-            <div className="grid grid-cold-1 lg:grid-cols-3 gap-4 mb-4 border-b py-3">
-              {themes.length > 0 &&
-                themes?.map((theme, index) => (
-                  <Theme
-                    theme={theme}
-                    index={index}
-                    themes={themes}
-                    setThemes={setThemes}
-                    generatePost={generatePost}
-                    generatePostIdeas={generatePostIdeas}
-                    setPost={setPost}
-                  />
-                ))}
-            </div>
-            {/* if user has selected a post to edit */}
-            {post && <PostEdit post={post} setPost={setPost} />}
+          <div className="grid grid-cols-2 2xl:grid-cols-3 gap-4 mb-">
+            <h1 className="text-3xl font-bold text-gray-400 dark:text-slate-800">
+              Themes
+            </h1>
           </div>
+          <span className="text-gray-600">
+            Please enter themes below to generate content
+          </span>
+          <div className="grid grid-cold-1 lg:grid-cols-3 gap-4 mb-4 border-b py-3">
+            {themes.length > 0 &&
+              themes?.map((theme, index) => (
+                <Theme
+                  theme={theme}
+                  index={index}
+                  themes={themes}
+                  setThemes={setThemes}
+                  generatePost={generatePost}
+                  generatePostIdeas={generatePostIdeas}
+                  setPost={setPost}
+                />
+              ))}
+          </div>
+          {/* if user has selected a post to edit */}
+          {post && <PostEdit post={post} setPost={setPost} />}
         </div>
 
         {/* sidedrawer */}
