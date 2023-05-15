@@ -1,6 +1,6 @@
 import React from "react";
 
-function Post({ topic }) {
+function Post({ topic, setPost }) {
   return (
     <div className="text-2l text-gray-400 dark:text-gray-500 fomt-semibold w-full">
       <details className="flex flex-col items-start justify-start space-y-2 w-full">

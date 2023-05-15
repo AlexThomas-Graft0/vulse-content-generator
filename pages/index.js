@@ -378,6 +378,7 @@ export default function Home() {
                     setThemes={setThemes}
                     generatePost={generatePost}
                     generatePostIdeas={generatePostIdeas}
+                    setPost={setPost}
                   />
                 ))}
             </div>

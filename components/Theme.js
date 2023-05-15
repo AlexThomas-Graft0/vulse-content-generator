@@ -9,6 +9,7 @@ function Theme({
   setThemes,
   generatePostIdeas,
   generatePost,
+  setPost,
 }) {
   return (
     <div
@@ -78,7 +79,7 @@ function Theme({
                 {topic.loading ? <Spinner /> : "Generate"}
               </button>
             </div>
-            {topic.post && <Post topic={topic} />}
+            {topic.post && <Post topic={topic} setPost={setPost} />}
           </div>
         ))}
       </div>
