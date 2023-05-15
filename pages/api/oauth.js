@@ -28,29 +28,6 @@ const Oauth = async (req, res) => {
     expires_in = tok.expires_in;
   }
 
-  console.log("access_token", access_token);
-
-  //needs permissions
-  // Fetch posts
-  //   const postUrl = "https://api.linkedin.com/v2/posts";
-  //   const userInfoUrl =
-  //     "https://api.linkedin.com/v2/userinfo";
-  //   const response = await fetch(postUrl, {
-  //     method: "GET",
-  //     headers: { Authorization: "Bearer " + access_token },
-  //   });
-  //   const posts = await response.json();
-
-  //   console.log(posts);
-
-  //   // Set cookie
-  //   res.setHeader(
-  //     "Set-Cookie",
-  //     `access_token=${access_token}; expires=${new Date(
-  //       Date.now() + expires_in * 1000
-  //     ).toUTCString()}; path=/; HttpOnly`
-  //   );
-
   const userInfoUrl = "https://api.linkedin.com/v2/userinfo";
   const response = await fetch(userInfoUrl, {
     method: "GET",
@@ -58,11 +35,8 @@ const Oauth = async (req, res) => {
   });
   const userInfo = await response.json();
 
-  console.log(userInfo);
   res.json(userInfo);
 
-  //   // Redirect to home page
-  //   res.redirect("http://localhost:3000");
 };
 
 export default Oauth;

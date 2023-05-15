@@ -4,6 +4,9 @@ import React, { useEffect, useState } from "react";
 import languages from "../consts/languages";
 import tones from "../consts/tones";
 import { LINKEDIN_URL } from "../helpers/auth";
+import MenuButton from "../components/MenuButton";
+import PostEdit from "../components/PostEdit";
+import Theme from "../components/Theme";
 
 export default function Home() {
   //main object to store all data
@@ -79,16 +82,6 @@ export default function Home() {
     `The subject of the post is: ${themes[0].theme}.`
   );
 
-  //   const joinedPrompt = `${promptIdentity}
-  // ${promptRules}
-  // ${promptTone}
-  // ${promptLanguage}
-  // ${promptHeadline}
-  // ${promptExample}
-  // ${promptStyle}
-  // ${promptSubject}`;
-  //   // console.log({ joinedPrompt });
-
   const [vulsePrompt, setVulsePrompt] = useState(``);
 
   const handleChangeTone = (e) => {
@@ -108,8 +101,6 @@ export default function Home() {
   };
 
   useEffect(() => {
-    console.log("here");
-    console.log({ headline, tone, language });
     // The users LinkedIn profile description is: {description}. <-- stripped out because we can't get bio
     // The user works in the {sector} industry. <-- stripped out because we can't get job history
     setVulsePrompt(`You are a ${headline} writing posts for your personal profile on the social media platform: LinkedIn
@@ -151,7 +142,6 @@ export default function Home() {
         ...profiles,
         personal: personalProfile,
       };
-      console.log({ newProfiles });
 
       setProfiles(newProfiles);
       setProfile("personal");
@@ -198,7 +188,7 @@ export default function Home() {
     const decoder = new TextDecoder();
     let done = false;
 
-    //TODO look into fixing this v
+    //TODO look into refactoring this
     let ideas = "[";
 
     while (!done) {
@@ -209,16 +199,12 @@ export default function Home() {
       ideas += chunkValue;
     }
 
-    console.log({ ideas });
-
     const sanitizedData = ideas
       .replace(/\\\"/g, '"')
       .replace(/title:/g, '"title":')
       .replace(/hashtags:/g, '"hashtags":');
-    console.log({ sanitizedData });
 
     const jsonArray = eval(sanitizedData.trim());
-    console.log(jsonArray);
 
     //add ideas to theme
     const newThemes = Object.assign([], themes);
@@ -231,21 +217,15 @@ export default function Home() {
 
     newThemes[index].loading = false;
     setThemes(newThemes);
-
-    console.log({ themes });
   };
 
   const generatePost = async (topic, postPillar) => {
     const newThemes = Object.assign([], themes);
 
     themes.forEach((theme, pi) => {
-      // console.log(theme);
-      // console.log(postPillar);
       if (theme.theme === postPillar) {
-        console.log("found theme");
         theme.ideas.forEach((idea, ideaIndex) => {
           if (idea.title === topic) {
-            console.log("found idea");
             idea.loading = true;
           }
         });
@@ -294,7 +274,6 @@ export default function Home() {
 
     themes.forEach((theme) => {
       if (theme.theme === postPillar) {
-        console.log(theme, postPillar);
         theme.ideas.forEach((post) => {
           if (post.title === topic) {
             selectedPost = post;
@@ -375,26 +354,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <button
-        type="button"
-        className="z-20 inline-flex items-center p-2 mt-2 ml-3 text-sm text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      >
-        <span className="sr-only">Open sidebar</span>
-        <svg
-          className="w-6 h-6"
-          aria-hidden="true"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            clipRule="evenodd"
-            fillRule="evenodd"
-            d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"
-          ></path>
-        </svg>
-      </button>
+      <MenuButton />
       <div className="grid grid-cols-12 gap-4 h-full min-h-screen">
         <div className="p-5 sm:ml64 col-span-12 lg:col-span-10">
           <div className="">
@@ -411,190 +371,22 @@ export default function Home() {
             <div className="grid grid-cold-1 lg:grid-cols-3 gap-4 mb-4 border-b py-3">
               {themes.length > 0 &&
                 themes?.map((theme, index) => (
-                  <div
-                    className={`flex flex-col items-start justify-start ${
-                      index != 2 && "border-r"
-                    } pr-3`}
-                    key={index}
-                  >
-                    <label
-                      htmlFor="input-group-1"
-                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >
-                      Your Email
-                    </label>
-                    <div className="flex w-full">
-                      <div className="relative w-full">
-                        <input
-                          type="text"
-                          className="p-2.5 w-full z-20 text-sm rounded-lg border border-gray-300"
-                          placeholder={`Theme ${index + 1}`}
-                          onChange={(e) => {
-                            setThemes(
-                              themes.map((item, i) =>
-                                i === index
-                                  ? { ...item, theme: e.target.value }
-                                  : item
-                              )
-                            );
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="absolute top-0 right-0 p-2.5 text-sm font-medium text-white bg-vulsePurple rounded-r-lg border border-vulsePurple hover:bg-violet-800 focus:ring- focus:outline-none focus:ring-violet-300 dark:bg-vulsePurple dark:hover:bg-vulsePurple dark:focus:ring-vulsePurple"
-                          onClick={async () => {
-                            await generatePostIdeas(theme.theme, index);
-                          }}
-                        >
-                          {theme.loading ? (
-                            <svg
-                              className="animate-spin h-5 w-5 text-white"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                              ></path>
-                            </svg>
-                          ) : (
-                            <svg
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={1.5}
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                              aria-hidden="true"
-                              className="w-5 h-5 transition duration-75 text-white"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
-                              />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* goes here */}
-                    <div className="flex flex-col items-start justify-center rounded space-y-4 py-2 px-1 text-sm">
-                      {theme.ideas?.map((topic, index) => (
-                        <div className="flex flex-col items-center justify-between space-x-2 py-2 px-1 text-sm w-full border-b2">
-                          <div
-                            className="flex items-center justify-between rounded space-x-2 py-2 px-1 text-sm w-full"
-                            key={index}
-                          >
-                            <h3 className="text-sm font-semibold text-gray-800">
-                              {topic.title}{" "}
-                            </h3>
-                            <button
-                              className={`ml-1 p-1 text-white bg-vulsePurple rounded-full ${
-                                topic.loading && "animate-spin"
-                              }`}
-                              onClick={() =>
-                                generatePost(topic.title, theme.theme)
-                              }
-                            >
-                              {topic.post || topic.loading ? (
-                                <svg
-                                  fill="currentColor"
-                                  viewBox="0 0 24 24"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  aria-hidden="true"
-                                  className="w-5 h-5"
-                                >
-                                  <path
-                                    clipRule="evenodd"
-                                    fillRule="evenodd"
-                                    d="M4.755 10.059a7.5 7.5 0 0112.548-3.364l1.903 1.903h-3.183a.75.75 0 100 1.5h4.992a.75.75 0 00.75-.75V4.356a.75.75 0 00-1.5 0v3.18l-1.9-1.9A9 9 0 003.306 9.67a.75.75 0 101.45.388zm15.408 3.352a.75.75 0 00-.919.53 7.5 7.5 0 01-12.548 3.364l-1.902-1.903h3.183a.75.75 0 000-1.5H2.984a.75.75 0 00-.75.75v4.992a.75.75 0 001.5 0v-3.18l1.9 1.9a9 9 0 0015.059-4.035.75.75 0 00-.53-.918z"
-                                  />
-                                </svg>
-                              ) : (
-                                "Generate"
-                              )}
-                            </button>
-                          </div>
-                          {topic.post && (
-                            <div className="text-2l text-gray-400 dark:text-gray-500 fomt-semibold w-full">
-                              <details className="flex flex-col items-start justify-start space-y-2 w-full">
-                                <summary className="flex items-center justify-start font-semibold space-x-2 py-2 px-1 text-sm border- cursor-pointer">
-                                  {topic.post.length > 60
-                                    ? topic.post.slice(0, 60) + "..."
-                                    : topic.post}
-                                  <svg
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth={1.5}
-                                    viewBox="0 0 24 24"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    aria-hidden="true"
-                                    className="w-5 h-5"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-                                    />
-                                  </svg>
-                                </summary>
-                                <div className="flex flex-col items-start justify-start space-y-2 w-full">
-                                  <div className="space-x-2 py-2 px-1 text-sm border-b whitespace-pre-wrap min-h-20 max-h-40 overflow-y-auto">
-                                    {topic.post}
-                                  </div>
-                                  <button
-                                    className="flex space-x-1 px-2 py-1 text-white bg-vulsePurple rounded-full self-end"
-                                    onClick={() => setPost(topic)}
-                                  >
-                                    <span>Edit </span>
-                                    <svg
-                                      fill="currentColor"
-                                      viewBox="0 0 24 24"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      aria-hidden="true"
-                                      className="w-5 h-5"
-                                    >
-                                      <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32l8.4-8.4z" />
-                                      <path d="M5.25 5.25a3 3 0 00-3 3v10.5a3 3 0 003 3h10.5a3 3 0 003-3V13.5a.75.75 0 00-1.5 0v5.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V8.25a1.5 1.5 0 011.5-1.5h5.25a.75.75 0 000-1.5H5.25z" />
-                                    </svg>
-                                  </button>
-                                </div>
-                              </details>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    {/* goes here */}
-
-                    <p className="text-2xl text-gray-400 dark:text-gray-500"></p>
-                  </div>
+                  <Theme
+                    theme={theme}
+                    index={index}
+                    themes={themes}
+                    setThemes={setThemes}
+                    generatePost={generatePost}
+                    generatePostIdeas={generatePostIdeas}
+                  />
                 ))}
             </div>
             {/* if user has selected a post to edit */}
-            {post && (
-              <div className="grid grid-cols-6 gap-4 mb-4 col-span-3">
-                <div className="flex flex-col items-start justify-center col-span-6 space-y-3">
-                  <textarea
-                    className="w-full p-2 text-xs border rounded shadow-md min-h-[200px] max-h-[500px] focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent"
-                    value={post.post}
-                    onChange={(e) => setPost(e.target.value)}
-                  />
-                </div>
-              </div>
-            )}
+            {post && <PostEdit post={post} setPost={setPost} />}
           </div>
         </div>
 
+        {/* sidedrawer */}
         <div
           className={` top-0 left-0 lg:flex flex-col items-start justify-start w-full h-full p-2 space-y-4 select-none bg-gray-100 pt-7 col-span-12 transition-all duration-300 ease-in-out ${
             sidebarOpen ? "absolute" : "hidden lg:flex lg:col-span-2"
@@ -605,7 +397,7 @@ export default function Home() {
               !sidebarOpen && "hidden"
             }`}
           >
-            <span
+            <button
               className="flex items-center justify-center w-6 h-6 rounded-full cursor-pointer hover:bg-gray-300"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
@@ -624,7 +416,7 @@ export default function Home() {
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-            </span>
+            </button>
           </div>
           {session ? (
             <button
@@ -856,6 +648,7 @@ export default function Home() {
             </div>
           </div>
         </div>
+        {/* sidedrawer */}
       </div>
     </>
   );

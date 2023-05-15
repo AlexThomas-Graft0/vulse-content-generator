@@ -28,22 +28,6 @@ const getPosts = async (req, res, access_token) => {
       "LinkedIn-Version": "202301",
     },
   });
-
-  const examplePost = `Still in shock that we are shortlisted for the technology Services StartUp of the year Wales @[StartUp Awards]. 
-
-  Read all about it on our website \
-  
-  {hashtag|\#|businessisbettertogether} {hashtag|\#|startupawards} `;
-
-  const expectedPost = `Still in shock that we are shortlisted for the technology Services StartUp of the year Wales @[StartUp Awards]. 
-
-  Read all about it on our website \
-  
-  #businessisbettertogether #startupawards`;
-
-  //urn example (urn:li:organization:xxxxxxxx)
-  //person urn example (urn:li:person:fukds_ETss) <-- remove also
-  //replace {hashtag|\#|businessisbettertogether} with #businessisbettertogether
   const removeURNAndSanitizeHashtags = (post) => {
     const regex = /urn:li:organization:\d+/g;
     const regex2 = /{hashtag\|\\#\|(\w+)}/g;
