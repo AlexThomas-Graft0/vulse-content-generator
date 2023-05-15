@@ -365,7 +365,7 @@ export default function Home() {
           <span className="text-gray-600">
             Please enter themes below to generate content
           </span>
-          <div className="grid grid-cold-1 lg:grid-cols-3 gap-4 mb-4 border-b py-3">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4 border-b py-3">
             {themes.length > 0 &&
               themes?.map((theme, index) => (
                 <Theme
