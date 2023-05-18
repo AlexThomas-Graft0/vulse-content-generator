@@ -1,7 +1,6 @@
 import { createParser } from "eventsource-parser";
 
 export async function OpenAIStream(payload) {
-  console.log({ payload });
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
 
@@ -22,7 +21,6 @@ export async function OpenAIStream(payload) {
       function onParse(event) {
         if (event.type === "event") {
           const data = event.data;
-          // https://beta.openai.com/docs/api-reference/completions/create#completions/create-stream
           if (data === "[DONE]") {
             controller.close();
             return;

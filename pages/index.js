@@ -212,10 +212,10 @@ export default function Home() {
     themes.forEach((theme, pi) => {
       if (pi === index) {
         theme.ideas = jsonArray;
+        theme.loading = false;
       }
     });
 
-    newThemes[index].loading = false;
     setThemes(newThemes);
   };
 
@@ -269,7 +269,7 @@ export default function Home() {
         vulsePrompt,
       }),
     });
-    const data = await res.body;
+    const data = res.body;
     let selectedPost;
 
     themes.forEach((theme) => {
@@ -355,16 +355,52 @@ export default function Home() {
       </Head>
 
       <MenuButton />
-      <div className="grid grid-cols-12 gap-4 h-full min-h-screen">
-        <div className="p-5 sm:ml64 col-span-12 lg:col-span-10">
-          <div className="grid grid-cols-2 2xl:grid-cols-3 gap-4 mb-">
-            <h1 className="text-3xl font-bold text-gray-400 dark:text-slate-800">
-              Themes
-            </h1>
+      <div className="grid grid-cols-12 gap-4 h-full min-h-screen p-5">
+        <div className="p-5 sm:ml64 col-span-12 lg:col-span-12">
+          <div className="flex justify-between items-center mb-4">
+            <div className="w-full">
+              <h1 className="text-3xl font-bold text-gray-400 dark:text-slate-800">
+                Themes
+              </h1>
+              <span className="text-gray-600">
+                Please enter themes below to generate content
+              </span>
+            </div>
+            <div className="flex flex-col items-start justify-center space-y-3">
+              <h3 className="text-sm text-gray-400 dark:text-gray-500 font-semibold">
+                Priority
+              </h3>
+
+              <div className="flex items-center">
+                <span
+                  className={`text-sm font-medium ${
+                    model === "gpt-3.5-turbo"
+                      ? "text-vulsePurple"
+                      : "text-gray-400"
+                  }`}
+                >
+                  Speed
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer mx-2">
+                  <input
+                    type="checkbox"
+                    value=""
+                    className="sr-only peer"
+                    onChange={handleSetModel}
+                    checked={model === "gpt-4"}
+                  />
+                  <div className="w-11 h-6 bg-vulsePurple rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:bor2er-gray-600 peer-checked:bg-vulsePurple"></div>
+                </label>
+                <span
+                  className={`text-sm font-medium ${
+                    model === "gpt-4" ? "text-vulsePurple" : "text-gray-400"
+                  }`}
+                >
+                  Quality
+                </span>
+              </div>
+            </div>
           </div>
-          <span className="text-gray-600">
-            Please enter themes below to generate content
-          </span>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4 border-b py-3">
             {themes.length > 0 &&
               themes?.map((theme, index) => (
@@ -382,270 +418,6 @@ export default function Home() {
           {/* if user has selected a post to edit */}
           {post && <PostEdit post={post} setPost={setPost} />}
         </div>
-
-        {/* sidedrawer */}
-        <div
-          className={` top-0 left-0 lg:flex flex-col items-start justify-start w-full h-full p-2 space-y-4 select-none bg-gray-100 pt-7 col-span-12 transition-all duration-300 ease-in-out ${
-            sidebarOpen ? "absolute" : "hidden lg:flex lg:col-span-2"
-          }`}
-        >
-          <div
-            className={`flex items-center justify-end w-full h-10 space-x-2 rounded ${
-              !sidebarOpen && "hidden"
-            }`}
-          >
-            <button
-              className="flex items-center justify-center w-6 h-6 rounded-full cursor-pointer hover:bg-gray-300"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              <svg
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-                className="w-5 h-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-          {session ? (
-            <button
-              className="flex w-full justify-start items-center space-x-2 text font-semibold text-gray-400 dark:text-vulsePurple"
-              onClick={() => signOut()}
-            >
-              <span>
-                {session.localizedFirstName} {session.localizedLastName}
-              </span>
-              <div
-                className={`p-2 w-10 h-10 text-white bg-gray-200 border-2 rounded-full group ${
-                  session
-                    ? "bg-violet-100 border-violet-500"
-                    : "bg-gray-200 border-gray-200"
-                }`}
-              >
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                  className="w-5 h-5 transition duration-75 text-vulsePurple group-hover:text-gray-500"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                  />
-                </svg>
-              </div>
-            </button>
-          ) : (
-            <button className="flex items-center text font-semibold text-gray-400 dark:text-slate-500 border-2 bg-slate-100 rounded-full px-3 py-1 hover:bg-slate-200 hover:text-slate-300">
-              <a
-                className="flex items-center space-x-1"
-                href={LINKEDIN_URL} //dynamically load different env var whether pesronal or company LinkedIn
-              >
-                <div className="text-gray-400 dark:text-slate-500 w-full">
-                  Connect LinkedIn
-                </div>
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                  className="w-5 h-5 transition duration-75 text-gray-400 group-hover:text-gray-500"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                  />
-                </svg>
-              </a>
-            </button>
-          )}
-          <div className="flex flex-col items-start justify-center space-y-3 w-full">
-            <h3 className="text-sm text-gray-400 dark:text-gray-500 font-semibold">
-              Priority
-            </h3>
-
-            <div className="flex items-center">
-              <span
-                className={`text-sm font-medium ${
-                  model === "gpt-3.5-turbo"
-                    ? "text-vulsePurple"
-                    : "text-gray-400"
-                }`}
-              >
-                Speed
-              </span>
-              <label className="relative inline-flex items-center cursor-pointer mx-2">
-                <input
-                  type="checkbox"
-                  value=""
-                  className="sr-only peer"
-                  onChange={handleSetModel}
-                  checked={model === "gpt-4"}
-                />
-                <div className="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:bor2er-gray-600 peer-checked:bg-vulsePurple"></div>
-              </label>
-              <span
-                className={`text-sm font-medium ${
-                  model === "gpt-4" ? "text-vulsePurple" : "text-gray-400"
-                }`}
-              >
-                Quality
-              </span>
-            </div>
-          </div>
-          <div className="flex flex-col items-center space-y-2 justify-center w-full">
-            <div className="flex flex-col items-start justify-center space-y-3 w-full mt-5">
-              <h3 className="text-sm text-gray-400 dark:text-gray-500 font-semibold">
-                Profiles
-              </h3>
-              <select
-                className="w-full p-3 mt- text-xs border rounded-lg"
-                onChange={handleChangeProfile}
-                value={profile}
-              >
-                {Object.keys(profiles).map((profileOption, index) => (
-                  <option key={index} value={profileOption}>
-                    {profileOption}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="flex items-center justify-start space-x-2 self-start">
-            <button
-              className="px-3 py-1 text-white bg-violet-500 rounded flex items-center"
-              onClick={handleNewPost}
-            >
-              <svg
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-                className="w-5 h-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 6v12m6-6H6"
-                />
-              </svg>
-              <span className="text-xs">New Post</span>
-            </button>
-          </div>
-          {posts?.length > 0 && (
-            <div className="flex flex-col items-start justify-center space-y-3 w-full">
-              <div className="flex flex-col items-center p-1 justify-start space-y-5 w-full shadow bg-gray-50 border-gray-300 rounded-lg">
-                {posts.map((post, index) => (
-                  <div
-                    className="flex flex-col items-start justify-start space-y- w-full"
-                    key={index}
-                  >
-                    <div className="self-end relative">
-                      <button
-                        className="z-20 absolute -top-2 -right-2 p-1 bg-red-300 rounded-full shadow text-white hover:bg-red-500"
-                        onClick={() => handleDeletePost(index)}
-                      >
-                        <svg
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={1.5}
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                          aria-hidden="true"
-                          className="w-3 h-3"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                    <textarea
-                      key={index}
-                      className="w-full p-1 mt- text-xs border rounded-lg h-[75px] focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent focus:h-[200px] resize-none transform transition-all duration-600 ease-in-out"
-                      value={post.content}
-                      onChange={(e) => handlePostChange(e, index)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          <div className="flex flex-col items-start justify-center space-y-3 w-full pb-10">
-            <h3 className="text-sm text-gray-400 dark:text-gray-500 font-semibold mt-5">
-              Modify Prompt
-            </h3>
-            <div className="flex flex-col items-start justify-center space-y-3 w-full">
-              <label className="text-xs text-gray-400 dark:text-gray-500 font-semibold">
-                Tone
-              </label>
-              <select
-                className="w-full p-3 mt- text-xs border rounded-lg"
-                onChange={handleChangeTone}
-                value={tone}
-              >
-                {tones.map((toneOption, index) => (
-                  <option key={index} value={toneOption}>
-                    {toneOption}
-                  </option>
-                ))}
-              </select>
-
-              <label className="text-xs text-gray-400 dark:text-gray-500 font-semibold">
-                Language
-              </label>
-              <select
-                className="w-full p-3 mt- text-xs border rounded-lg"
-                onChange={handleChangeLanguage}
-                value={language}
-              >
-                {languages.map((languageOption, index) => (
-                  <option key={index} value={languageOption}>
-                    {languageOption}
-                  </option>
-                ))}
-              </select>
-
-              <label className="text-xs text-gray-400 dark:text-gray-500 font-semibold">
-                Headline
-              </label>
-              <input
-                className="w-full p-3 mt- text-xs border rounded-lg"
-                value={headline}
-                onChange={handleChangeHeadline}
-              />
-
-              <label className="text-xs text-gray-400 dark:text-gray-500 font-semibold">
-                Prompt
-              </label>
-              <textarea
-                className="w-full p-3 mt- text-xs border rounded-lg h-[500px] focus:outline-none focus:ring-2 focus:ring-vulsePurple focus:border-transparent focus:h-[300px] resize-none transform transition-all duration-600 ease-in-out"
-                value={vulsePrompt}
-                onChange={handleChangePrompt}
-              />
-            </div>
-          </div>
-        </div>
-        {/* sidedrawer */}
       </div>
     </>
   );
