@@ -1,9 +1,6 @@
 import { deleteCookie, getCookies } from "cookies-next";
 import Head from "next/head";
 import React, { useEffect, useState } from "react";
-import languages from "../consts/languages";
-import tones from "../consts/tones";
-import { LINKEDIN_URL } from "../helpers/auth";
 import MenuButton from "../components/MenuButton";
 import PostEdit from "../components/PostEdit";
 import Theme from "../components/Theme";
@@ -101,33 +98,6 @@ export default function Home() {
   };
 
   useEffect(() => {
-    // The users LinkedIn profile description is: {description}. <-- stripped out because we can't get bio
-    // The user works in the {sector} industry. <-- stripped out because we can't get job history
-    setVulsePrompt(`You are a ${headline} writing posts for your personal profile on the social media platform: LinkedIn
-    The post MUST follow these rules:
-    - The post should have a short opening sentence not more than 350 characters.
-    - The opening sentence must be followed by a line break.
-    - The post should be no more than 3000 characters.
-    - Separate each sentence with a line break.
-    - The post should be written in the third person.
-    - The post should be written in the present tense.
-    - There should be no more than 3 hashtags, these should be relevant to the post copy.
-    - Hashtags should be at the end of the post
-    Posts should be ${tone}.
-    The language should be ${language}.
-
-    The users LinkedIn headline is: ${headline}.
-
-    An example of a previous post by the user is:
-    -------
-    ${posts ? posts?.map((post) => post.content).join("\n") : ""}
-    -------
-
-    The style of the new post should be similar to the example.
-    The subject of the post is: ${themes[0].theme}.`); //set to curret post idea
-  }, [tone, headline, language, posts, themes]); //if there are any changes, update the vulse prompt
-
-  useEffect(() => {
     const cookies = getCookies();
 
     const getPosts = async () => {
@@ -159,6 +129,33 @@ export default function Home() {
       );
     }
   }, []);
+
+  useEffect(() => {
+    // The users LinkedIn profile description is: {description}. <-- stripped out because we can't get bio
+    // The user works in the {sector} industry. <-- stripped out because we can't get job history
+    setVulsePrompt(`You are a ${headline} writing posts for your personal profile on the social media platform: LinkedIn
+    The post MUST follow these rules:
+    - The post should have a short opening sentence not more than 350 characters.
+    - The opening sentence must be followed by a line break.
+    - The post should be no more than 3000 characters.
+    - Separate each sentence with a line break.
+    - The post should be written in the third person.
+    - The post should be written in the present tense.
+    - There should be no more than 3 hashtags, these should be relevant to the post copy.
+    - Hashtags should be at the end of the post
+    Posts should be ${tone}.
+    The language should be ${language}.
+
+    The users LinkedIn headline is: ${headline}.
+
+    An example of a previous post by the user is:
+    -------
+    ${posts ? posts?.map((post) => post.content).join("\n") : ""}
+    -------
+
+    The style of the new post should be similar to the example.
+    The subject of the post is: ${themes[0].theme}.`); //set to curret post idea
+  }, [tone, headline, language, posts, themes]); //if there are any changes, update the vulse prompt
 
   //function that generates the main 3 ideas for a topic
   const generatePostIdeas = async (topic, index) => {
@@ -269,7 +266,7 @@ export default function Home() {
         vulsePrompt,
       }),
     });
-    const data = res.body;
+    const data = await res.json();
     let selectedPost;
 
     themes.forEach((theme) => {
@@ -282,19 +279,22 @@ export default function Home() {
       }
     });
 
-    const reader = data.getReader();
-    const decoder = new TextDecoder();
-    let done = false;
-    let generatedPost = "";
+    // const reader = data.getReader();
+    // const decoder = new TextDecoder();
 
-    while (!done) {
-      const { value, done: doneReading } = await reader.read();
-      done = doneReading;
-      const chunkValue = decoder.decode(value);
-      generatedPost += chunkValue;
-      selectedPost.loading = false;
-      selectedPost.post = generatedPost;
-    }
+    // let done = false;
+    // let generatedPost = "";
+
+    // while (!done) {
+    //   const { value, done: doneReading } = await reader.read();
+    //   done = doneReading;
+    //   const chunkValue = decoder.decode(value);
+    //   console.log({ chunkValue });
+    //   generatedPost += chunkValue;
+    // }
+
+    selectedPost.loading = false;
+    selectedPost.post = data.message;
 
     setThemes(themes);
   };
