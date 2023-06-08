@@ -166,13 +166,11 @@ if (!process.env.OPENAI_API_KEY) {
   throw new Error("Missing env var from OpenAI");
 }
 
-async function POST(req, res) {
+async function POST(req) {
   const { messages, model } = await req.body;
 
   if (!messages) {
-    return res.status(400).json({
-      error: "Missing messages",
-    });
+    return new Response("Missing messages", { status: 400 });
   }
 
   const queryString = `Everything there is to know about ${
@@ -196,14 +194,11 @@ async function POST(req, res) {
   //writing the post
   const payload = {
     model: model || "gpt-3.5-turbo",
-    messages: [...messages],
-    temperature: 0.7,
+    messages: finalMessages,
+    temperature: 0.6,
     top_p: 1,
-    frequency_penalty: 0,
-    presence_penalty: 0,
-    max_tokens: 1000,
-    stream: true,
     n: 1,
+    stream: true,
   };
 
   // const stream = await OpenAIStream(payload);
@@ -220,9 +215,12 @@ async function POST(req, res) {
 
   console.log("Completion:", completion.data.choices[0].message.content);
 
-  return res.status(200).json({
-    message: completion.data.choices[0].message.content,
-  });
+  const stream = await OpenAIStream(payload);
+  return new Response(stream);
+
+  // return res.status(200).json({
+  //   message: completion.data.choices[0].delta?.content,
+  // });
 }
 
 export default POST;
