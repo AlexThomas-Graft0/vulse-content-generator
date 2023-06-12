@@ -1,4 +1,4 @@
-// import { OpenAIStream } from "../../utils/OpenAIStream";
+import { OpenAIStream } from "../../utils/OpenAIStream";
 import { createParser } from "eventsource-parser";
 
 import puppeteer from "puppeteer";
@@ -167,31 +167,36 @@ if (!process.env.OPENAI_API_KEY) {
 }
 
 async function POST(req) {
-  const { messages, model } = await req.body;
+  const { messages, model, webSearch } = await req.body;
 
   if (!messages) {
     return new Response("Missing messages", { status: 400 });
   }
 
-  const queryString = `Everything there is to know about ${
-    messages[messages.length - 1].content
-  }`;
-  // const query = await generateSearchQuery(topic);
+  let pretrainingMessage = null;
 
-  const summaries = await searchWeb(queryString);
-  console.log("Summaries:", summaries);
+  if (webSearch) {
+    console.log("Web search is true");
+    const queryString = `Everything there is to know about ${
+      messages[messages.length - 1].content
+    }`;
 
-  const pretrainingMessage = {
-    role: "system",
-    content: `The following summaries are the latest information on ${queryString}. ${
-      summaries?.join(" ") || "No summaries found"
-    }`,
-  };
-  const finalMessages = [pretrainingMessage, ...messages];
+    const summaries = await searchWeb(queryString);
+
+    pretrainingMessage = {
+      role: "system",
+      content: `The following summaries are the latest information on ${queryString}. ${
+        summaries?.join(" ") || "No summaries found"
+      }`,
+    };
+  }
+  const finalMessages = [
+    pretrainingMessage ? pretrainingMessage : null,
+    ...messages,
+  ].filter(Boolean);
+
   console.log("Final messages:", finalMessages);
 
-  //
-  //writing the post
   const payload = {
     model: model || "gpt-3.5-turbo",
     messages: finalMessages,
@@ -201,26 +206,9 @@ async function POST(req) {
     stream: true,
   };
 
-  // const stream = await OpenAIStream(payload);
-  // return new Response(stream);
-
-  const completion = await openai.createChatCompletion({
-    model: "gpt-4",
-    messages: finalMessages,
-    temperature: 0.6,
-    top_p: 1,
-    n: 1,
-    stream: false,
-  });
-
-  console.log("Completion:", completion.data.choices[0].message.content);
-
+  console.log({ payload });
   const stream = await OpenAIStream(payload);
   return new Response(stream);
-
-  // return res.status(200).json({
-  //   message: completion.data.choices[0].delta?.content,
-  // });
 }
 
 export default POST;

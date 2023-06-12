@@ -26,6 +26,7 @@ export default function Home() {
   const [session, setSession] = useState(null); //user session from linkedin
   const [sidebarOpen, setSidebarOpen] = useState(false); //show sidebar
   const [model, setModel] = useState("gpt-4"); //model to use for gpt - speed(gpt-3.5-turbo)/quality(gpt-4)
+  const [webSearch, setWebSearch] = useState(false); //search web for content
   const [profiles, setProfiles] = useState({
     new: [{ content: "" }],
   }); //profiles fetched from linkedin - awaiting partner scope permissions 'r_member_social'
@@ -264,6 +265,7 @@ export default function Home() {
         ],
         model,
         vulsePrompt,
+        webSearch,
       }),
     });
     const data = await res.json();
@@ -345,6 +347,22 @@ export default function Home() {
     }
   }
 
+  function handleSetWebSearch(e) {
+    if (e.target.checked) {
+      setWebSearch(true);
+    } else {
+      setWebSearch(false);
+    }
+  }
+
+  function handleSetModel(e) {
+    if (e.target.checked) {
+      setModel("gpt-4");
+    } else {
+      setModel("gpt-3.5-turbo");
+    }
+  }
+
   return (
     <>
       <Head>
@@ -366,38 +384,72 @@ export default function Home() {
                 Please enter themes below to generate content
               </span>
             </div>
-            <div className="flex flex-col items-start justify-center space-y-3">
-              <h3 className="text-sm text-gray-400 dark:text-gray-500 font-semibold">
-                Priority
-              </h3>
+            <div className="flex items-start justify-center space-x-3">
+              <div className="flex flex-col items-start justify-center space-y-3">
+                <h3 className="text-sm text-gray-400 dark:text-gray-500 font-semibold">
+                  Priority
+                </h3>
 
-              <div className="flex items-center">
-                <span
-                  className={`text-sm font-medium ${
-                    model === "gpt-3.5-turbo"
-                      ? "text-vulsePurple"
-                      : "text-gray-400"
-                  }`}
-                >
-                  Speed
-                </span>
-                <label className="relative inline-flex items-center cursor-pointer mx-2">
-                  <input
-                    type="checkbox"
-                    value=""
-                    className="sr-only peer"
-                    onChange={handleSetModel}
-                    checked={model === "gpt-4"}
-                  />
-                  <div className="w-11 h-6 bg-vulsePurple rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:bor2er-gray-600 peer-checked:bg-vulsePurple"></div>
-                </label>
-                <span
-                  className={`text-sm font-medium ${
-                    model === "gpt-4" ? "text-vulsePurple" : "text-gray-400"
-                  }`}
-                >
-                  Quality
-                </span>
+                <div className="flex items-center">
+                  <span
+                    className={`text-sm font-medium ${
+                      model === "gpt-3.5-turbo"
+                        ? "text-vulsePurple"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    Speed
+                  </span>
+                  <label className="relative inline-flex items-center cursor-pointer mx-2">
+                    <input
+                      type="checkbox"
+                      value=""
+                      className="sr-only peer"
+                      onChange={handleSetModel}
+                      checked={model === "gpt-4"}
+                    />
+                    <div className="w-11 h-6 bg-vulsePurple rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:bor2er-gray-600 peer-checked:bg-vulsePurple"></div>
+                  </label>
+                  <span
+                    className={`text-sm font-medium ${
+                      model === "gpt-4" ? "text-vulsePurple" : "text-gray-400"
+                    }`}
+                  >
+                    Quality
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-col items-start justify-center space-y-3">
+                <h3 className="text-sm text-gray-400 dark:text-gray-500 font-semibold">
+                  Web Browsing
+                </h3>
+
+                <div className="flex items-center">
+                  <span
+                    className={`text-sm font-medium ${
+                      webSearch ? "text-gray-400" : "text-vulsePurple"
+                    }`}
+                  >
+                    Off
+                  </span>
+                  <label className="relative inline-flex items-center cursor-pointer mx-2">
+                    <input
+                      type="checkbox"
+                      value=""
+                      className="sr-only peer"
+                      onChange={handleSetWebSearch}
+                      checked={webSearch}
+                    />
+                    <div className="w-11 h-6 bg-gray-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border dark:border-gray-300 peer-checked:bg-vulsePurple"></div>
+                  </label>
+                  <span
+                    className={`text-sm font-medium ${
+                      webSearch ? "text-vulsePurple" : "text-gray-400"
+                    }`}
+                  >
+                    On
+                  </span>
+                </div>
               </div>
             </div>
           </div>
